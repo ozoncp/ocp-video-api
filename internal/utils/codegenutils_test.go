@@ -63,14 +63,14 @@ func TestMapKVSwapped(t *testing.T) {
 
 	testFixtures := []TestFixture {
 		{ map[TMapKey]TMapValue { 1: 10 },
-			map[TMapValue]TMapKey { 1: 10 },
+			map[TMapValue]TMapKey { 10: 1 },
 		},
 	}
 
 	for _, fixture := range testFixtures {
 		got, _ := MapKVSwapped(fixture.in)
 		if cmp.Equal(got, fixture.want) != true {
-			t.Errorf("Error")
+			t.Errorf(spew.Sprintf("got:\n%v\nwant:\n%+v", got, fixture.want))
 		}
 	}
 }
