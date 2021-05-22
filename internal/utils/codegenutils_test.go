@@ -8,7 +8,7 @@ import (
 )
 
 //TODO: протестировать граничные случаи
-func TestSliceChunked(t *testing.T) {
+func TestSliceChunkedTSliceUtils(t *testing.T) {
 	type TestFixture struct {
 		chunkSize int
 		in []TSliceUtils
@@ -46,7 +46,7 @@ func TestSliceChunked(t *testing.T) {
 	}
 
 	for _, fixture := range testFixtures {
-		got := SliceChunked(fixture.in, fixture.chunkSize)
+		got := SliceChunkedTSliceUtils(fixture.in, fixture.chunkSize)
 		if cmp.Equal(got, fixture.want) == false {
 			t.Errorf(spew.Sprintf("got:\n%v\nwant:\n%+v", got, fixture.want))
 		}
@@ -54,7 +54,7 @@ func TestSliceChunked(t *testing.T) {
 }
 
 //TODO: протестировать граничные случаи
-func TestSliceFilter(t *testing.T) {
+func TestSliceFilterTSliceUtils(t *testing.T) {
 	type TestFixture struct {
 		in []TSliceUtils
 		ban []TSliceUtils
@@ -81,7 +81,7 @@ func TestSliceFilter(t *testing.T) {
 	}
 
 	for _, fixture := range testFixtures {
-		got := SliceFilter(fixture.in, fixture.ban)
+		got := SliceFilterTSliceUtils(fixture.in, fixture.ban)
 		if cmp.Equal(got, fixture.want) != true {
 			t.Errorf(spew.Sprintf("got:\n%v\nwant:\n%+v", got, fixture.want))
 		}
@@ -90,7 +90,7 @@ func TestSliceFilter(t *testing.T) {
 
 //TODO: протестировать граничные случаи
 //TODO: протестировать панику
-func TestMapKVSwapped(t *testing.T) {
+func TestMapKTMapKeyVTMapValueSwapped(t *testing.T) {
 	type TestFixture struct {
 		in map[TMapKey]TMapValue
 		want map[TMapValue]TMapKey
@@ -106,7 +106,7 @@ func TestMapKVSwapped(t *testing.T) {
 	}
 
 	for _, fixture := range testFixtures {
-		got := MapKVSwapped(fixture.in)
+		got := MapKTMapKeyVTMapValueSwapped(fixture.in)
 		if cmp.Equal(got, fixture.want) != true {
 			t.Errorf(spew.Sprintf("got:\n%v\nwant:\n%+v", got, fixture.want))
 		}

@@ -1,3 +1,5 @@
+//go:generate genny -in=$GOFILE -out=gen-$GOFILE gen "TSliceUtils=int TMapKey=int TMapValue=int"
+
 // Package utils provides building blocks for main ocp-video-api microservice
 package utils
 
@@ -9,11 +11,11 @@ import (
 // specialised slice types utils funcions
 type TSliceUtils generic.Type
 
-// SliceChunked return slice of slices, every inner slice points to original input slice mem
+// SliceChunkedTSliceUtils return slice of slices, every inner slice points to original input slice mem
 // in - input slice
 // chunkSize - size of each chunk
 // Panics if chunkSize <= 0!
-func SliceChunked(in []TSliceUtils, chunkSize int) [][]TSliceUtils {
+func SliceChunkedTSliceUtils(in []TSliceUtils, chunkSize int) [][]TSliceUtils {
 	if chunkSize <= 0 {
 		panic("chunkSize must be >0")
 	}
@@ -27,10 +29,10 @@ func SliceChunked(in []TSliceUtils, chunkSize int) [][]TSliceUtils {
 	return retval
 }
 
-// SliceChunked return slice filtered from ban elements, filter is performed inplace!
+// SliceFilterTSliceUtils return slice filtered from ban elements, filter is performed inplace!
 // in - input slice
 // ban - slice of elements which would be filtered
-func SliceFilter(in []TSliceUtils, ban []TSliceUtils) []TSliceUtils {
+func SliceFilterTSliceUtils(in []TSliceUtils, ban []TSliceUtils) []TSliceUtils {
 	retval := in[:0]
 	for _, v := range in {
 		isBanned := false
@@ -51,10 +53,10 @@ func SliceFilter(in []TSliceUtils, ban []TSliceUtils) []TSliceUtils {
 type TMapKey generic.Type
 type TMapValue generic.Type
 
-// MapKVSwapped return new map with flipped key to value
+// MapKTMapKeyVTMapValueSwapped return new map with flipped key to value
 // in - input map
 // Panics if input map contains value duplicates
-func MapKVSwapped(in map[TMapKey]TMapValue) map[TMapValue]TMapKey {
+func MapKTMapKeyVTMapValueSwapped(in map[TMapKey]TMapValue) map[TMapValue]TMapKey {
 	retval := make(map[TMapValue]TMapKey, len(in))
 	for k, v := range in {
 		if _, found := retval[v]; found {
