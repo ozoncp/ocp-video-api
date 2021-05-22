@@ -21,8 +21,22 @@ func SliceChunked(in []TSliceUtils, chunkSize int) ([][]TSliceUtils, error) {
 	return retval, nil
 }
 
-func SliceFilter(in []TSliceUtils, ban []TSliceUtils) ([][]TSliceUtils, error) {
-	panic("Not implemented!")
+func SliceFilter(in []TSliceUtils, ban []TSliceUtils) ([]TSliceUtils, error) {
+	retval := in[:0]
+	for _, v := range in {
+		isBanned := false
+		for _, banned := range ban {
+			if v == banned {
+				isBanned = true
+				break
+			}
+		}
+		if !isBanned {
+			retval = append(retval, v)
+		}
+	}
+
+	return retval, nil
 }
 
 type TMapKey generic.Type
