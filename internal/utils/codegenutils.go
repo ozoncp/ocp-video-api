@@ -43,5 +43,13 @@ type TMapKey generic.Type
 type TMapValue generic.Type
 
 func MapKVSwapped(in map[TMapKey]TMapValue) (map[TMapValue]TMapKey, error) {
-	panic("Not implemented!")
+	retval := make(map[TMapValue]TMapKey, len(in))
+	for k, v := range in {
+		if _, found := retval[v]; found {
+			panic("input map should not contains duplicate values!")
+		}
+		retval[v] = k
+	}
+
+	return retval, nil
 }
