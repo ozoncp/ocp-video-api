@@ -50,7 +50,7 @@ func TestSliceFilter(t *testing.T) {
 	for _, fixture := range testFixtures {
 		got, _ := SliceFilter(fixture.in, fixture.ban)
 		if cmp.Equal(got, fixture.want) != true {
-			t.Errorf("Error")
+			t.Errorf(spew.Sprintf("got:\n%v\nwant:\n%+v", got, fixture.want))
 		}
 	}
 }
