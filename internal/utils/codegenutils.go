@@ -1,15 +1,14 @@
 package utils
 
 import (
-	"fmt"
 	"github.com/cheekybits/genny/generic"
 )
 
 type TSliceUtils generic.Type
 
-func SliceChunked(in []TSliceUtils, chunkSize int) ([][]TSliceUtils, error) {
+func SliceChunked(in []TSliceUtils, chunkSize int) [][]TSliceUtils {
 	if chunkSize <= 0 {
-		return nil, fmt.Errorf("chunkSize must be >0")
+		panic("chunkSize must be >0")
 	}
 
 	retval := make([][]TSliceUtils, 0, (len(in) + chunkSize - 1) / chunkSize)
@@ -18,10 +17,10 @@ func SliceChunked(in []TSliceUtils, chunkSize int) ([][]TSliceUtils, error) {
 	}
 	retval = append(retval, in)
 
-	return retval, nil
+	return retval
 }
 
-func SliceFilter(in []TSliceUtils, ban []TSliceUtils) ([]TSliceUtils, error) {
+func SliceFilter(in []TSliceUtils, ban []TSliceUtils) []TSliceUtils {
 	retval := in[:0]
 	for _, v := range in {
 		isBanned := false
@@ -36,13 +35,13 @@ func SliceFilter(in []TSliceUtils, ban []TSliceUtils) ([]TSliceUtils, error) {
 		}
 	}
 
-	return retval, nil
+	return retval
 }
 
 type TMapKey generic.Type
 type TMapValue generic.Type
 
-func MapKVSwapped(in map[TMapKey]TMapValue) (map[TMapValue]TMapKey, error) {
+func MapKVSwapped(in map[TMapKey]TMapValue) map[TMapValue]TMapKey {
 	retval := make(map[TMapValue]TMapKey, len(in))
 	for k, v := range in {
 		if _, found := retval[v]; found {
@@ -51,5 +50,5 @@ func MapKVSwapped(in map[TMapKey]TMapValue) (map[TMapValue]TMapKey, error) {
 		retval[v] = k
 	}
 
-	return retval, nil
+	return retval
 }

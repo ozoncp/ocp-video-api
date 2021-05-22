@@ -46,7 +46,7 @@ func TestSliceChunked(t *testing.T) {
 	}
 
 	for _, fixture := range testFixtures {
-		got, _ := SliceChunked(fixture.in, fixture.chunkSize)
+		got := SliceChunked(fixture.in, fixture.chunkSize)
 		if cmp.Equal(got, fixture.want) == false {
 			t.Errorf(spew.Sprintf("got:\n%v\nwant:\n%+v", got, fixture.want))
 		}
@@ -81,7 +81,7 @@ func TestSliceFilter(t *testing.T) {
 	}
 
 	for _, fixture := range testFixtures {
-		got, _ := SliceFilter(fixture.in, fixture.ban)
+		got := SliceFilter(fixture.in, fixture.ban)
 		if cmp.Equal(got, fixture.want) != true {
 			t.Errorf(spew.Sprintf("got:\n%v\nwant:\n%+v", got, fixture.want))
 		}
@@ -106,7 +106,7 @@ func TestMapKVSwapped(t *testing.T) {
 	}
 
 	for _, fixture := range testFixtures {
-		got, _ := MapKVSwapped(fixture.in)
+		got := MapKVSwapped(fixture.in)
 		if cmp.Equal(got, fixture.want) != true {
 			t.Errorf(spew.Sprintf("got:\n%v\nwant:\n%+v", got, fixture.want))
 		}
