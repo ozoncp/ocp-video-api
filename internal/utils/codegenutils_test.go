@@ -7,6 +7,7 @@ import (
 	"github.com/davecgh/go-spew/spew"
 )
 
+//TODO: протестировать граничные случаи
 func TestSliceChunked(t *testing.T) {
 	type TestFixture struct {
 		chunkSize int
@@ -23,6 +24,25 @@ func TestSliceChunked(t *testing.T) {
 				[]TSliceUtils{ 3 },
 			},
 		},
+		{ 2,
+			[]TSliceUtils{1, 2, 3},
+			[][]TSliceUtils {
+				[]TSliceUtils{ 1, 2 },
+				[]TSliceUtils{ 3 },
+			},
+		},
+		{ 3,
+			[]TSliceUtils{1, 2, 3},
+			[][]TSliceUtils {
+				[]TSliceUtils{ 1, 2, 3 },
+			},
+		},
+		{ 4,
+			[]TSliceUtils{1, 2, 3},
+			[][]TSliceUtils {
+				[]TSliceUtils{ 1, 2, 3 },
+			},
+		},
 	}
 
 	for _, fixture := range testFixtures {
@@ -33,6 +53,7 @@ func TestSliceChunked(t *testing.T) {
 	}
 }
 
+//TODO: протестировать граничные случаи
 func TestSliceFilter(t *testing.T) {
 	type TestFixture struct {
 		in []TSliceUtils
@@ -45,6 +66,18 @@ func TestSliceFilter(t *testing.T) {
 			[]TSliceUtils{1, 2},
 			[]TSliceUtils{3},
 		},
+		{ []TSliceUtils{1, 1, 2, 3},
+			[]TSliceUtils{1, 2, 2},
+			[]TSliceUtils{3},
+		},
+		{ []TSliceUtils{1, 1, 1, 1},
+			[]TSliceUtils{1, 2, 2},
+			[]TSliceUtils{},
+		},
+		{ []TSliceUtils{1, 1, 1, 1},
+			[]TSliceUtils{},
+			[]TSliceUtils{1, 1, 1, 1},
+		},
 	}
 
 	for _, fixture := range testFixtures {
@@ -55,6 +88,8 @@ func TestSliceFilter(t *testing.T) {
 	}
 }
 
+//TODO: протестировать граничные случаи
+//TODO: протестировать панику
 func TestMapKVSwapped(t *testing.T) {
 	type TestFixture struct {
 		in map[TMapKey]TMapValue
@@ -64,6 +99,9 @@ func TestMapKVSwapped(t *testing.T) {
 	testFixtures := []TestFixture {
 		{ map[TMapKey]TMapValue { 1: 10 },
 			map[TMapValue]TMapKey { 10: 1 },
+		},
+		{ map[TMapKey]TMapValue { 1: 10, 2: 20 },
+			map[TMapValue]TMapKey { 10: 1, 20: 2 },
 		},
 	}
 
