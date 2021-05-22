@@ -1,28 +1,34 @@
 package utils
 
 import (
-	"reflect"
+	"github.com/google/go-cmp/cmp"
 	"testing"
+
+	"github.com/davecgh/go-spew/spew"
 )
 
 func TestSliceChunked(t *testing.T) {
 	type TestFixture struct {
-		chunkSize uint
+		chunkSize int
 		in []TSliceUtils
-		want []TSliceUtils
+		want [][]TSliceUtils
 	}
 
 	testFixtures := []TestFixture {
 		{ 1,
 			[]TSliceUtils{1, 2, 3},
-			[]TSliceUtils{[]TSliceUtils{1}, []TSliceUtils{2}, []TSliceUtils{3}},
+			[][]TSliceUtils {
+				[]TSliceUtils{ 1 },
+				[]TSliceUtils{ 2 },
+				[]TSliceUtils{ 3 },
+			},
 		},
 	}
 
 	for _, fixture := range testFixtures {
 		got, _ := SliceChunked(fixture.in, fixture.chunkSize)
-		if reflect.DeepEqual(got, fixture.want) != true {
-			t.Errorf("Error")
+		if cmp.Equal(got, fixture.want) == false {
+			t.Errorf(spew.Sprintf("got:\n%v\nwant:\n%+v", got, fixture.want))
 		}
 	}
 }
@@ -43,7 +49,7 @@ func TestSliceFilter(t *testing.T) {
 
 	for _, fixture := range testFixtures {
 		got, _ := SliceFilter(fixture.in, fixture.ban)
-		if reflect.DeepEqual(got, fixture.want) != true {
+		if cmp.Equal(got, fixture.want) != true {
 			t.Errorf("Error")
 		}
 	}
@@ -63,7 +69,7 @@ func TestMapKVSwapped(t *testing.T) {
 
 	for _, fixture := range testFixtures {
 		got, _ := MapKVSwapped(fixture.in)
-		if reflect.DeepEqual(got, fixture.want) != true {
+		if cmp.Equal(got, fixture.want) != true {
 			t.Errorf("Error")
 		}
 	}
