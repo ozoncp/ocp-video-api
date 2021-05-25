@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"ocp-video-api/internal/models"
 	"ocp-video-api/internal/utils"
 	"os"
 )
@@ -19,6 +20,9 @@ func main() {
 	fmt.Println(flipped)
 
 	loopFileOpenClose()
+
+	v := models.NewVideo(1, 1, "link_to_video")
+	print("Video id: ", v.VideoId, " to_string: ", v.String())
 
 	fmt.Print(DESCRIPTION)
 }
