@@ -21,7 +21,7 @@ func main() {
 
 	loopFileOpenClose()
 
-	v := models.NewVideo(1, 1, "link_to_video")
+	v := models.Video{VideoId: 1, SlideId: 1, Link: "link_to_video"}
 	print("Video id: ", v.VideoId, " to_string: ", v.String())
 
 	fmt.Print(DESCRIPTION)
