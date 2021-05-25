@@ -1,4 +1,4 @@
-//go:generate genny -in=$GOFILE -out=gen-$GOFILE gen "TSliceUtils=int TMapKey=int TMapValue=int"
+//go:generate genny -in=$GOFILE -out=gen-$GOFILE gen "TSliceUtils=int,models.Video TMapKey=int TMapValue=int"
 
 // Package utils provides building blocks for main ocp-video-api microservice
 package utils
