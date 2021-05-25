@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"ocp-video-api/internal/utils"
+	"os"
 )
 
 const DESCRIPTION = `
@@ -17,5 +18,26 @@ func main() {
 	flipped := utils.MapKIntVIntSwapped(in)
 	fmt.Println(flipped)
 
+	loopFileOpenClose()
+
 	fmt.Print(DESCRIPTION)
+}
+
+// TODO: add tests /proc/<PID>/fd/... single text.txt opened file on each iteration
+func loopFileOpenClose() {
+	const FileDeferForTimes = 3
+	for i := 0; i < FileDeferForTimes; i++ {
+		func() {
+			f, err := os.Open("/tmp/test.txt")
+			if err != nil {
+				panic(err)
+			}
+			defer func(f *os.File) {
+				err := f.Close()
+				if err != nil {
+					panic(err)
+				}
+			}(f)
+		}()
+	}
 }
