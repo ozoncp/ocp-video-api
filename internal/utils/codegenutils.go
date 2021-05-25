@@ -20,9 +20,9 @@ func SliceChunkedTSliceUtils(in []TSliceUtils, chunkSize int) [][]TSliceUtils {
 		panic("chunkSize must be >0")
 	}
 
-	retval := make([][]TSliceUtils, 0, (len(in) + chunkSize - 1) / chunkSize)
+	retval := make([][]TSliceUtils, 0, (len(in)+chunkSize-1)/chunkSize)
 	for chunkSize < len(in) {
-		in, retval = in[chunkSize:], append(retval, in[0 : chunkSize : chunkSize])
+		in, retval = in[chunkSize:], append(retval, in[0:chunkSize:chunkSize])
 	}
 	retval = append(retval, in)
 
