@@ -7,7 +7,7 @@ import (
 )
 
 type Flusher interface {
-	Flush(tasks []models.Video) ([]models.Video, error)
+	Flush(vs []models.Video) ([]models.Video, error)
 }
 
 type flusher struct {
