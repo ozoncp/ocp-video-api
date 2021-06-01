@@ -27,7 +27,7 @@ var _ = Describe("Flusher", func() {
 	})
 
 	Context("Flusher successfully saves videos less than batch size len", func() {
-		in := []models.Video {
+		in := []models.Video{
 			models.Video{
 				VideoId: 1,
 				SlideId: 1,
@@ -44,7 +44,7 @@ var _ = Describe("Flusher", func() {
 	})
 
 	Context("Flusher successfully saves videos exact as batch size len", func() {
-		in := []models.Video {
+		in := []models.Video{
 			models.Video{
 				VideoId: 1,
 				SlideId: 1,
@@ -66,7 +66,7 @@ var _ = Describe("Flusher", func() {
 	})
 
 	Context("Flusher successfully saves videos more than batch size len", func() {
-		in := []models.Video {
+		in := []models.Video{
 			models.Video{
 				VideoId: 1,
 				SlideId: 1,
@@ -94,7 +94,7 @@ var _ = Describe("Flusher", func() {
 
 	Context("Flusher return error on insufficient arguments", func() {
 		It("returns original slice and error on batch size equal to 0", func() {
-			in := []models.Video {
+			in := []models.Video{
 				models.Video{
 					VideoId: 1,
 					SlideId: 1,
@@ -128,11 +128,11 @@ var _ = Describe("Flusher", func() {
 		})
 
 		It("returns original slice and error on empty slice, passed as slice if chunk size is ok", func() {
-			in := []models.Video {{}}
+			in := []models.Video{{}}
 			f = flusher.New(2, mockRepo)
 			mockRepo.EXPECT().AddVideos(gomock.Any()).Return(internal.ErrInvalidArg).MinTimes(1).MaxTimes(1)
 			rest, err := f.Flush(in)
-			Expect(rest).Should(BeEquivalentTo([]models.Video {{}}))
+			Expect(rest).Should(BeEquivalentTo([]models.Video{{}}))
 			Expect(err).Should(BeIdenticalTo(internal.ErrInvalidArg))
 		})
 	})
