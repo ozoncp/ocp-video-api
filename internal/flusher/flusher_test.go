@@ -113,7 +113,7 @@ var _ = Describe("Flusher", func() {
 			}
 
 			f = flusher.New(0, mockRepo)
-			mockRepo.EXPECT().AddVideos(gomock.Any()).Return(internal.ErrInvalidSize).MinTimes(1).MaxTimes(1)
+			mockRepo.EXPECT().AddVideos(gomock.Any()).Return(nil).MinTimes(1).MaxTimes(1)
 			rest, err := f.Flush(in)
 			Expect(rest).Should(BeEquivalentTo(in))
 			Expect(err).Should(BeIdenticalTo(internal.ErrInvalidSize))
@@ -121,7 +121,7 @@ var _ = Describe("Flusher", func() {
 
 		It("returns original slice and error on nil, passed as slice if chunk size is ok", func() {
 			f = flusher.New(2, mockRepo)
-			mockRepo.EXPECT().AddVideos(gomock.Any()).Return(internal.ErrInvalidArg).MinTimes(1).MaxTimes(1)
+			mockRepo.EXPECT().AddVideos(gomock.Any()).Return(nil).MinTimes(1).MaxTimes(1)
 			rest, err := f.Flush(nil)
 			Expect(rest).Should(BeNil())
 			Expect(err).Should(BeIdenticalTo(internal.ErrInvalidArg))
@@ -130,7 +130,7 @@ var _ = Describe("Flusher", func() {
 		It("returns original slice and error on empty slice, passed as slice if chunk size is ok", func() {
 			in := []models.Video{{}}
 			f = flusher.New(2, mockRepo)
-			mockRepo.EXPECT().AddVideos(gomock.Any()).Return(internal.ErrInvalidArg).MinTimes(1).MaxTimes(1)
+			mockRepo.EXPECT().AddVideos(gomock.Any()).Return(nil).MinTimes(1).MaxTimes(1)
 			rest, err := f.Flush(in)
 			Expect(rest).Should(BeEquivalentTo([]models.Video{{}}))
 			Expect(err).Should(BeIdenticalTo(internal.ErrInvalidArg))
