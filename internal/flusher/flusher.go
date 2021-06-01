@@ -12,7 +12,7 @@ type Flusher interface {
 
 type flusher struct {
 	chunkSize int
-	repo repo.Repo
+	repo      repo.Repo
 }
 
 func NewFlusher(chunkSize int, repo repo.Repo) Flusher {
@@ -21,7 +21,7 @@ func NewFlusher(chunkSize int, repo repo.Repo) Flusher {
 	}
 }
 
-func (f *flusher) Flush(vs []models.Video) ([]models.Video, error)  {
+func (f *flusher) Flush(vs []models.Video) ([]models.Video, error) {
 	if f.chunkSize <= 0 {
 		return nil, internal.ErrInvalidSize
 	}
@@ -31,7 +31,7 @@ func (f *flusher) Flush(vs []models.Video) ([]models.Video, error)  {
 		if err := f.repo.AddVideos(vs[0:f.chunkSize:f.chunkSize]); err != nil {
 			return vs, err
 		}
-		vs = vs[f.chunkSize:]		// TODO: test it carefully
+		vs = vs[f.chunkSize:] // TODO: test it carefully
 	}
 
 	return nil, nil

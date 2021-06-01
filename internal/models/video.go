@@ -6,7 +6,7 @@ import "fmt"
 type Video struct {
 	VideoId uint64
 	SlideId uint64
-	Link string
+	Link    string
 }
 
 func (v *Video) String() string {
