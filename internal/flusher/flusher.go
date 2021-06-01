@@ -26,7 +26,7 @@ func (f *flusher) Flush(vs []models.Video) ([]models.Video, error) {
 		return vs, internal.ErrInvalidSize
 	}
 
-	if vs == nil || len(vs) <= 0 {
+	if vs == nil {
 		return vs, internal.ErrInvalidArg
 	}
 
