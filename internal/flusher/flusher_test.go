@@ -1,6 +1,7 @@
 package flusher_test
 
 import (
+	"errors"
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -125,6 +126,52 @@ var _ = Describe("Flusher", func() {
 			rest, err := f.Flush(nil)
 			Expect(rest).Should(BeNil())
 			Expect(err).Should(BeIdenticalTo(internal.ErrInvalidArg))
+		})
+	})
+
+	Context("Flushes partially what is already processe on repo.AddVideos error", func() {
+		It("", func() {
+			in := []models.Video{
+				models.Video{
+					VideoId: 1,
+					SlideId: 1,
+					Link:    "video/1",
+				},
+				models.Video{
+					VideoId: 2,
+					SlideId: 1,
+					Link:    "video/2",
+				},
+				models.Video{
+					VideoId: 3,
+					SlideId: 2,
+					Link:    "video/3",
+				},
+			}
+			expected := []models.Video{
+				models.Video{
+					VideoId: 3,
+					SlideId: 2,
+					Link:    "video/3",
+				},
+			}
+			someErr := errors.New("Some error")
+			f = flusher.New(1, mockRepo)
+
+			idx, failOn := 0, 2
+			mockRepo.EXPECT().AddVideos(gomock.Any()).DoAndReturn(
+				func(vs []models.Video) error {
+					if idx == failOn {
+						return someErr
+					}
+					idx++
+					return nil
+				},
+			).MinTimes(1).MaxTimes(3)
+
+			rest, err := f.Flush(in)
+			Expect(rest).Should(BeEquivalentTo(expected))
+			Expect(err).Should(BeIdenticalTo(someErr))
 		})
 	})
 })
