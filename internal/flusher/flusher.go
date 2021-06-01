@@ -15,7 +15,7 @@ type flusher struct {
 	repo      repo.Repo
 }
 
-func NewFlusher(chunkSize int, repo repo.Repo) Flusher {
+func New(chunkSize int, repo repo.Repo) Flusher {
 	return &flusher{
 		chunkSize: chunkSize, repo: repo,
 	}
