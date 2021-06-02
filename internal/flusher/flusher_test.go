@@ -155,7 +155,7 @@ var _ = Describe("Flusher", func() {
 					Link:    "video/3",
 				},
 			}
-			someErr := errors.New("Some error")
+			someErr := errors.New("some error")
 			f = flusher.New(1, mockRepo)
 
 			idx, failOn := 0, 2
