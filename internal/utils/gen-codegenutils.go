@@ -48,7 +48,6 @@ func SliceFilterInt(in []int, ban []int) []int {
 	return retval
 }
 
-
 // Package utils provides building blocks for main ocp-video-api microservice
 
 // models.Video is the placeholder for genny to monomorphise for
