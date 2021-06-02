@@ -26,10 +26,6 @@ func (f *flusher) Flush(vs []models.Video) ([]models.Video, error) {
 		return vs, internal.ErrInvalidSize
 	}
 
-	if vs == nil {
-		return vs, internal.ErrInvalidArg
-	}
-
 	s := f.chunkSize
 	for len(vs) > 0 {
 		if len(vs) < s {

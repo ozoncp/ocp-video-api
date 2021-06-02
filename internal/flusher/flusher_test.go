@@ -122,10 +122,10 @@ var _ = Describe("Flusher", func() {
 
 		It("returns original slice and error on nil, passed as slice if chunk size is ok", func() {
 			f = flusher.New(2, mockRepo)
-			mockRepo.EXPECT().AddVideos(gomock.Any()).Return(nil).MinTimes(1).MaxTimes(1)
+			mockRepo.EXPECT().AddVideos(gomock.Any()).Return(nil).Times(0)
 			rest, err := f.Flush(nil)
 			Expect(rest).Should(BeNil())
-			Expect(err).Should(BeIdenticalTo(internal.ErrInvalidArg))
+			Expect(err).Should(BeNil())
 		})
 	})
 
