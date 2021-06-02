@@ -37,7 +37,7 @@ var _ = Describe("Flusher", func() {
 		}
 		It("", func() {
 			f = flusher.New(2, mockRepo)
-			mockRepo.EXPECT().AddVideos(gomock.Any()).Return(nil).MinTimes(1).MaxTimes(1)
+			mockRepo.EXPECT().AddVideos(gomock.Any()).Return(nil).Times(1)
 			rest, err := f.Flush(in)
 			Expect(rest).Should(BeNil())
 			Expect(err).Should(BeNil())
@@ -59,7 +59,7 @@ var _ = Describe("Flusher", func() {
 		}
 		It("", func() {
 			f = flusher.New(2, mockRepo)
-			mockRepo.EXPECT().AddVideos(gomock.Any()).Return(nil).MinTimes(1).MaxTimes(1)
+			mockRepo.EXPECT().AddVideos(gomock.Any()).Return(nil).Times(1)
 			rest, err := f.Flush(in)
 			Expect(rest).Should(BeNil())
 			Expect(err).Should(BeNil())
@@ -86,7 +86,7 @@ var _ = Describe("Flusher", func() {
 		}
 		It("", func() {
 			f = flusher.New(2, mockRepo)
-			mockRepo.EXPECT().AddVideos(gomock.Any()).Return(nil).MinTimes(2).MaxTimes(2)
+			mockRepo.EXPECT().AddVideos(gomock.Any()).Return(nil).Times(2)
 			rest, err := f.Flush(in)
 			Expect(rest).Should(BeNil())
 			Expect(err).Should(BeNil())
@@ -114,7 +114,7 @@ var _ = Describe("Flusher", func() {
 			}
 
 			f = flusher.New(0, mockRepo)
-			mockRepo.EXPECT().AddVideos(gomock.Any()).Return(nil).MinTimes(1).MaxTimes(1)
+			mockRepo.EXPECT().AddVideos(gomock.Any()).Return(nil).Times(0)
 			rest, err := f.Flush(in)
 			Expect(rest).Should(BeEquivalentTo(in))
 			Expect(err).Should(BeIdenticalTo(internal.ErrInvalidSize))
@@ -167,7 +167,7 @@ var _ = Describe("Flusher", func() {
 					idx++
 					return nil
 				},
-			).MinTimes(1).MaxTimes(3)
+			).Times(3)
 
 			rest, err := f.Flush(in)
 			Expect(rest).Should(BeEquivalentTo(expected))
