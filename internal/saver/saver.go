@@ -11,17 +11,6 @@ import (
 	"ocp-video-api/internal/models"
 )
 
-type OverflowPolicy = uint8
-
-const (
-	OverflowDropAll = OverflowPolicy(iota)
-	OverflowDropFirst
-)
-
-func DropFirstPolicy(s *saver) {
-	s.policy = OverflowDropFirst
-}
-
 type Saver interface {
 	Init(ctx context.Context)
 	Save(ctx context.Context, v models.Video) error
@@ -32,14 +21,12 @@ func New(
 	capacity uint,
 	period time.Duration,
 	flusher flusher.Flusher,
-	cfgrers ...func(*saver),
 ) Saver {
 	vs := make(chan models.Video, capacity)
 	done := make(chan struct{})
 
 	rv := &saver{
 		closing: 0,
-		policy:  OverflowDropAll,
 		videos:  vs,
 		done:    done,
 		period:  period,
@@ -47,18 +34,11 @@ func New(
 		ticker:  nil,
 	}
 
-	// позволяет позднее добавлять в пакет функции-конфигураторы, вызываемые создателем, предполагается, что
-	// внутри пакета есть некая политика по умолчанию
-	for _, cfgrer := range cfgrers {
-		cfgrer(rv)
-	}
-
 	return rv
 }
 
 type saver struct {
 	closing int32
-	policy  OverflowPolicy
 	videos  chan models.Video
 	done    chan struct{}
 	period  time.Duration
@@ -77,16 +57,8 @@ func (s *saver) Save(ctx context.Context, v models.Video) error {
 	}
 
 	if len(s.videos) == cap(s.videos) {
-		switch s.policy {
-		case OverflowDropAll:
-			//TODO: каждый раз при чтении из канала лочится мьютекс, найти способ единожды залочить мьютекс
-			// и вычитать cap(s.videos) из канала
-			for drainCnt := cap(s.videos); drainCnt > 0; drainCnt-- {
-				<-s.videos
-			}
-		case OverflowDropFirst:
-			<-s.videos
-		}
+			// в случае если буфер канала полон - дропаем наиболее старую запись
+		<-s.videos
 	}
 	s.videos <- v
 	return nil
