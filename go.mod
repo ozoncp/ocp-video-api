@@ -5,6 +5,7 @@ go 1.16
 require (
 	github.com/cheekybits/genny v1.0.0
 	github.com/davecgh/go-spew v1.1.1
+	github.com/envoyproxy/protoc-gen-validate v0.6.1 // indirect
 	github.com/golang/mock v1.5.0 // indirect
 	github.com/google/go-cmp v0.5.5
 	github.com/onsi/ginkgo v1.16.3 // indirect
