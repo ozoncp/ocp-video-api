@@ -46,7 +46,7 @@ func runHttp() error {
 	return http.ListenAndServe(*httpEndpoint, mux)
 }
 
-func runGrpc() error {
+func runGrpc() {
 	listen, err := net.Listen("tcp", grpcPort)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
@@ -59,8 +59,6 @@ func runGrpc() error {
 	if err := s.Serve(listen); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}
-
-	return nil
 }
 
 func main() {
