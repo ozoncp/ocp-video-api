@@ -106,52 +106,13 @@ var _ = Describe("Saver", func() {
 		})
 	})
 
-	Context("drop all on overflow test", func() {
-		var (
-			cancelFunc context.CancelFunc
-		)
-
-		BeforeEach(func() {
-			s = saver.New(testCapacity, time.Millisecond*10, mockFlusher)
-			ctx, cancelFunc = context.WithCancel(ctx)
-			mockFlusher.EXPECT().Flush([]models.Video{models.Video{
-				VideoId: 3,
-				SlideId: 42,
-				Link:    "/video/42",
-			}}).Return(nil, nil)
-		})
-
-		JustBeforeEach(func() {
-			err = s.Save(ctx, models.Video{
-				VideoId: 1,
-				SlideId: 42,
-				Link:    "/video/42",
-			})
-			err = s.Save(ctx, models.Video{
-				VideoId: 2,
-				SlideId: 42,
-				Link:    "/video/42",
-			})
-			err = s.Save(ctx, models.Video{
-				VideoId: 3,
-				SlideId: 42,
-				Link:    "/video/42",
-			})
-			cancelFunc()
-		})
-
-		It("drop", func() {
-			Expect(err).Should(BeNil())
-		})
-	})
-
 	Context("drop single on overflow test", func() {
 		var (
 			cancelFunc context.CancelFunc
 		)
 
 		BeforeEach(func() {
-			s = saver.New(testCapacity, time.Millisecond*10, mockFlusher, saver.DropFirstPolicy)
+			s = saver.New(testCapacity, time.Millisecond*10, mockFlusher)
 			ctx, cancelFunc = context.WithCancel(ctx)
 			mockFlusher.EXPECT().Flush([]models.Video{models.Video{
 				VideoId: 2,
