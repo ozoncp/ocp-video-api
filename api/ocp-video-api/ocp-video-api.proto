@@ -1,0 +1,82 @@
+syntax = "proto3";
+
+import "google/api/annotations.proto";
+import "github.com/envoyproxy/protoc-gen-validate/validate/validate.proto";
+
+package ocp.video.api;
+
+option go_package = "ocp-video-api/pkg/ocp-video-api;oct_video_api";
+
+// Описание видео
+
+service OcpVideoApi {
+
+    // Возвращает список видео
+    rpc ListVideosV1(ListVideosV1Request) returns (ListVideosV1Response) {
+        option (google.api.http) = {
+            get: "/v1/videos"
+        };
+    }
+
+    // Возвращает описание видео по его идентификатору
+    rpc DescribeVideoV1(DescribeVideoV1Request) returns (DescribeVideoV1Response) {
+        option (google.api.http) = {
+            get: "/v1/videos/{video_id}"
+        };
+    }
+
+    // Создает новое видео
+    rpc CreateVideoV1(CreateVideoV1Request) returns (CreateVideoV1Response) {
+        option (google.api.http) = {
+            post: "/v1/videos"
+        };
+    }
+
+    // Удаляет видео по идентификатору
+    rpc RemoveVideoV1(RemoveVideoV1Request) returns (RemoveVideoV1Response) {
+        option (google.api.http) = {
+            delete: "/v1/videos/{video_id}"
+        };
+    }
+}
+
+message ListVideosV1Request {
+    uint64 limit = 1;
+    uint64 offset = 2;
+}
+
+message ListVideosV1Response {
+    repeated Video videos = 1;
+}
+
+message CreateVideoV1Request {
+    uint64 slide_id = 1;
+    string description = 2;
+}
+
+message CreateVideoV1Response {
+    uint64 video_id = 1;
+}
+
+message RemoveVideoV1Request {
+		uint64 video_id = 1 [(validate.rules).uint64.gt = 0];
+}
+
+message RemoveVideoV1Response {
+    bool found = 1;
+}
+
+message DescribeVideoV1Request {
+		uint64 video_id = 1 [(validate.rules).uint64.gt = 0];
+}
+
+message DescribeVideoV1Response {
+    Video video = 1;
+}
+
+// Описание видео
+message Video {
+    uint64 id = 1;
+    uint64 slide_id = 2;
+    string link = 3;
+}

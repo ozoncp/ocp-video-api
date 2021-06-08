@@ -1,47 +1,72 @@
 package main
 
 import (
+	"context"
+	"flag"
 	"fmt"
-	"ocp-video-api/internal/models"
-	"ocp-video-api/internal/utils"
-	"os"
+	"log"
+	"net"
+	"net/http"
+
+	"ocp-video-api/internal/api"
+	desc "ocp-video-api/pkg/ocp-video-api"
+
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"google.golang.org/grpc"
 )
 
-const DESCRIPTION = `
-Video API provider
-Author: Mosolov Sergey
-Start date: 2021/05/13
+const (
+	grpcPort = ":7002"
+	httpPort = ":7000"
+)
 
-`
+var (
+	grpcEndpoint = flag.String("grpc-server-endpoint", "0.0.0.0"+grpcPort, "gRPC server endpoint")
+	httpEndpoint = flag.String("http-server-endpoint", "0.0.0.0"+httpPort, "HTTP server endpoint")
+)
 
-func main() {
-	in := map[int]int{1: 10, 2: 20}
-	flipped := utils.MapKIntVIntSwapped(in)
-	fmt.Println(flipped)
+func runHttp() error {
+	ctx := context.Background()
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
 
-	loopFileOpenClose()
+	mux := http.NewServeMux()
+	gwmux := runtime.NewServeMux()
+	opts := []grpc.DialOption{grpc.WithInsecure()}
+	err := desc.RegisterOcpVideoApiHandlerFromEndpoint(ctx, gwmux, *grpcEndpoint, opts)
+	if err != nil {
+		return err
+	}
 
-	v := models.Video{VideoId: 1, SlideId: 1, Link: "link_to_video"}
-	print("Video id: ", v.VideoId, " to_string: ", v.String())
+	//TODO: add swagger?
+	// mux.HandleFunc("/swagger/", serveSwagger)
+	mux.Handle("/", gwmux)
 
-	fmt.Print(DESCRIPTION)
+	fmt.Printf("Server listening on %s\n", *httpEndpoint)
+	return http.ListenAndServe(*httpEndpoint, mux)
 }
 
-// TODO: add tests /proc/<PID>/fd/... single text.txt opened file on each iteration
-func loopFileOpenClose() {
-	const FileDeferForTimes = 3
-	for i := 0; i < FileDeferForTimes; i++ {
-		func() {
-			f, err := os.Open("/tmp/test.txt")
-			if err != nil {
-				panic(err)
-			}
-			defer func(f *os.File) {
-				err := f.Close()
-				if err != nil {
-					panic(err)
-				}
-			}(f)
-		}()
+func runGrpc() {
+	listen, err := net.Listen("tcp", grpcPort)
+	if err != nil {
+		log.Fatalf("failed to listen: %v", err)
+	}
+
+	s := grpc.NewServer()
+	desc.RegisterOcpVideoApiServer(s, api.NewOcpVideoApi())
+
+	fmt.Printf("Server listening on %s\n", *grpcEndpoint)
+	if err := s.Serve(listen); err != nil {
+		log.Fatalf("failed to serve: %v", err)
+	}
+}
+
+func main() {
+	flag.Parse()
+
+	go runGrpc()
+
+	if err := runHttp(); err != nil {
+		log.Fatal(err)
 	}
 }
