@@ -59,7 +59,7 @@ message CreateVideoV1Response {
 }
 
 message RemoveVideoV1Request {
-		uint64 video_id = 1 [(validate.rules).uint64.gt = 0];
+    uint64 video_id = 1 [(validate.rules).uint64.gt = 0];
 }
 
 message RemoveVideoV1Response {
@@ -67,7 +67,7 @@ message RemoveVideoV1Response {
 }
 
 message DescribeVideoV1Request {
-		uint64 video_id = 1 [(validate.rules).uint64.gt = 0];
+    uint64 video_id = 1 [(validate.rules).uint64.gt = 0];
 }
 
 message DescribeVideoV1Response {
