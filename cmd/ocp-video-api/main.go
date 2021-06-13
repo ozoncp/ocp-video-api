@@ -13,8 +13,12 @@ import (
 	"ocp-video-api/internal/api"
 	desc "ocp-video-api/pkg/ocp-video-api"
 
+	"github.com/Masterminds/squirrel"
+
+	"github.com/jmoiron/sqlx"
+	_ "github.com/lib/pq"
+
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"github.com/jackc/pgx/v4"
 	"google.golang.org/grpc"
 )
 
@@ -70,28 +74,37 @@ func printIsContainered() {
 	if _, err := os.Lstat("/.dockerenv"); err != nil && os.IsNotExist(err) {
 		inContainer = "outside"
 	}
-	fmt.Println("Rebuilded... I'm running on:\n", myOS, myArch)
+	fmt.Println("2... I'm running on:\n", myOS, myArch)
 	fmt.Println("I'm running container status:\n", inContainer)
 }
 
+type WidgetSerialized struct {
+	Name string  `json:"name,omitempty"`
+	Weight int64 `json:"weight,omitempty"`
+}
+
 func testComposedDb() {
-	urlExample := "postgres://goland:goland@db:5432/goland"
-	conn, err := pgx.Connect(context.Background(), urlExample) //os.Getenv("DATABASE_URL"))
+	ctx := context.Background()
+	db, err := sqlx.Connect("postgres",
+		  "postgres://goland:goland@db:5432/goland?sslmode=disable")
 	if err != nil {
-		fmt.Println("Unable to connect to database: %v\n", err)
-		os.Exit(1)
-	}
-	defer conn.Close(context.Background())
-
-	var name string
-	var weight int64
-	err = conn.QueryRow(context.Background(), "select name, weight from widgets where id=$1", 42).Scan(&name, &weight)
-	if err != nil {
-		fmt.Println("QueryRow failed: %v\n", err)
-		os.Exit(1)
+		fmt.Println(err)
+		return
 	}
 
-	fmt.Println(name, weight)
+	query := squirrel.Select("name", "weight").
+		From("widgets").
+		Where(squirrel.Eq{"id": 42}).
+		RunWith(db).
+		PlaceholderFormat(squirrel.Dollar)
+
+	var widget WidgetSerialized
+	if err := query.QueryRowContext(ctx).Scan(&widget.Name, &widget.Weight); err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	fmt.Println(widget)
 }
 
 func main() {
