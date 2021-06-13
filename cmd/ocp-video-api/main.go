@@ -14,6 +14,7 @@ import (
 	desc "ocp-video-api/pkg/ocp-video-api"
 
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/jackc/pgx/v4"
 	"google.golang.org/grpc"
 )
 
@@ -73,8 +74,30 @@ func printIsContainered() {
 	fmt.Println("I'm running container status:\n", inContainer)
 }
 
+func testComposedDb() {
+	urlExample := "postgres://goland:goland@db:5432/goland"
+	conn, err := pgx.Connect(context.Background(), urlExample) //os.Getenv("DATABASE_URL"))
+	if err != nil {
+		fmt.Println("Unable to connect to database: %v\n", err)
+		os.Exit(1)
+	}
+	defer conn.Close(context.Background())
+
+	var name string
+	var weight int64
+	err = conn.QueryRow(context.Background(), "select name, weight from widgets where id=$1", 42).Scan(&name, &weight)
+	if err != nil {
+		fmt.Println("QueryRow failed: %v\n", err)
+		os.Exit(1)
+	}
+
+	fmt.Println(name, weight)
+}
+
 func main() {
 	printIsContainered()
+
+	testComposedDb()
 
 	flag.Parse()
 

@@ -10,6 +10,7 @@ require (
 	github.com/golang/protobuf v1.5.2
 	github.com/google/go-cmp v0.5.5
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
+	github.com/jackc/pgx/v4 v4.11.0
 	github.com/onsi/ginkgo v1.16.3
 	github.com/onsi/gomega v1.13.0
 	github.com/rs/zerolog v1.22.0
