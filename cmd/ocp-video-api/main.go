@@ -7,6 +7,8 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"os"
+	goruntime "runtime"
 
 	"ocp-video-api/internal/api"
 	desc "ocp-video-api/pkg/ocp-video-api"
@@ -61,7 +63,19 @@ func runGrpc() {
 	}
 }
 
+func printIsContainered() {
+	myOS, myArch := goruntime.GOOS, goruntime.GOARCH
+	inContainer := "inside"
+	if _, err := os.Lstat("/.dockerenv"); err != nil && os.IsNotExist(err) {
+		inContainer = "outside"
+	}
+	fmt.Println("Rebuilded... I'm running on:\n", myOS, myArch)
+	fmt.Println("I'm running container status:\n", inContainer)
+}
+
 func main() {
+	printIsContainered()
+
 	flag.Parse()
 
 	go runGrpc()
