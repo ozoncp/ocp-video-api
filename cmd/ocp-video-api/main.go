@@ -79,14 +79,14 @@ func printIsContainered() {
 }
 
 type WidgetSerialized struct {
-	Name string  `json:"name,omitempty"`
-	Weight int64 `json:"weight,omitempty"`
+	Name   string `json:"name,omitempty"`
+	Weight int64  `json:"weight,omitempty"`
 }
 
 func testComposedDb() {
 	ctx := context.Background()
 	db, err := sqlx.Connect("postgres",
-		  "postgres://goland:goland@db:5432/goland?sslmode=disable")
+		"postgres://goland:goland@db:5432/goland?sslmode=disable")
 	if err != nil {
 		fmt.Println(err)
 		return
