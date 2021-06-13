@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/Masterminds/squirrel"
 	"github.com/jmoiron/sqlx"
+	"github.com/rs/zerolog/log"
 	"ocp-video-api/internal"
 	"ocp-video-api/internal/models"
 	"ocp-video-api/internal/utils"
@@ -28,6 +29,7 @@ type repo struct {
 }
 
 func (r *repo) AddVideos(ctx context.Context, vs []models.Video) (int64, error) {
+	log.Print("Adding videos", vs)
 	batches := utils.SliceChunkedModelsVideo(vs, r.chunkSize)
 
 	var pushedCnt int64
@@ -43,19 +45,23 @@ func (r *repo) AddVideos(ctx context.Context, vs []models.Video) (int64, error) 
 
 		rc, err := query.ExecContext(ctx)
 		if err != nil {
+			log.Print("Error pushing batch", batch, "already pushed", pushedCnt, "error", err)
 			return pushedCnt, err
 		}
 
 		added, err := rc.RowsAffected()
 		if err != nil {
+			log.Print("Error rows affected", batch, "already pushed", pushedCnt, "error", err)
 			return pushedCnt, err
 		}
 		pushedCnt += added
 	}
+	log.Print("Videos succesfully pushed", pushedCnt)
 	return pushedCnt, nil
 }
 
 func (r *repo) AddVideo(ctx context.Context, v *models.Video) (uint64, error) {
+	log.Print("Adding single video", *v)
 	query := squirrel.Insert(tableName).
 		Columns("slide_id", "link").
 		Values(v.SlideId, v.Link).
@@ -65,6 +71,7 @@ func (r *repo) AddVideo(ctx context.Context, v *models.Video) (uint64, error) {
 
 	err := query.QueryRowContext(ctx).Scan(&v.VideoId)
 	if err != nil {
+		log.Print("Error pushing video", err)
 		return 0, err
 	}
 
@@ -72,6 +79,7 @@ func (r *repo) AddVideo(ctx context.Context, v *models.Video) (uint64, error) {
 }
 
 func (r *repo) RemoveVideo(ctx context.Context, ID uint64) error {
+	log.Print("Removing single video with ID", ID)
 	query := squirrel.Delete(tableName).
 		Where(squirrel.Eq{"id": ID}).
 		RunWith(r.db).
@@ -79,18 +87,21 @@ func (r *repo) RemoveVideo(ctx context.Context, ID uint64) error {
 
 	result, err := query.ExecContext(ctx)
 	if err != nil {
+		log.Print("Error deleting video ID", ID, "error", err)
 		return err
 	}
 
 	cnt, err := result.RowsAffected()
-	if cnt > 1 {
+	if cnt >= 1 {
 		return nil
 	} else {
+		log.Print("Error rows affected returned 0, video not found, ID", ID)
 		return internal.ErrIDNotFound
 	}
 }
 
 func (r *repo) GetVideo(ctx context.Context, ID uint64) (*models.Video, error) {
+	log.Print("Get single video with ID", ID)
 	query := squirrel.Select("id", "slide_id", "link").
 		From(tableName).
 		Where(squirrel.Eq{"id": ID}).
@@ -99,6 +110,7 @@ func (r *repo) GetVideo(ctx context.Context, ID uint64) (*models.Video, error) {
 
 	rval := models.Video{}
 	if err := query.QueryRowContext(ctx).Scan(&rval.VideoId, rval.SlideId, rval.Link); err != nil {
+		log.Print("Error retrieving video with ID", ID, "error", err)
 		return nil, err
 	}
 
