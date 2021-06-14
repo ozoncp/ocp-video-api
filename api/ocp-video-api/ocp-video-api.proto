@@ -5,7 +5,7 @@ import "github.com/envoyproxy/protoc-gen-validate/validate/validate.proto";
 
 package ocp.video.api;
 
-option go_package = "ocp-video-api/pkg/ocp-video-api;oct_video_api";
+option go_package = "ocp-video-api/pkg/ocp-video-api;ocp_video_api";
 
 // Описание видео
 
