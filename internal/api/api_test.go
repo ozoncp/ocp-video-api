@@ -3,6 +3,7 @@ package api_test
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/jmoiron/sqlx"
 	. "github.com/onsi/ginkgo"
@@ -45,16 +46,14 @@ var _ = Describe("Api", func() {
 	Context("create video", func() {
 		var (
 			ID             uint64 = 1
-			createRequest  *desc.CreateVideoV1Request
 			createResponse *desc.CreateVideoV1Response
-			grpcApi        desc.OcpVideoApiServer
 		)
 
 		BeforeEach(func() {
 			r := repo.NewRepo(sqlxDB, 2)
-			grpcApi = api.NewOcpVideoApi(r)
+			grpcApi := api.NewOcpVideoApi(r)
 
-			createRequest = &desc.CreateVideoV1Request{
+			createRequest := &desc.CreateVideoV1Request{
 				SlideId: 42,
 				Link:    "link/to/42",
 			}
@@ -76,16 +75,41 @@ var _ = Describe("Api", func() {
 
 	Context("create video invalid argument", func() {
 		var (
-			createRequest  *desc.CreateVideoV1Request
 			createResponse *desc.CreateVideoV1Response
-			grpcApi        desc.OcpVideoApiServer
+			err            error
 		)
 
 		BeforeEach(func() {
 			r := repo.NewRepo(sqlxDB, 2)
-			grpcApi = api.NewOcpVideoApi(r)
+			grpcApi := api.NewOcpVideoApi(r)
+			createRequest := &desc.CreateVideoV1Request{SlideId: 0, Link: "invalid/slide/id"}
+			createResponse, err = grpcApi.CreateVideoV1(ctx, createRequest)
+		})
 
-			createRequest = &desc.CreateVideoV1Request{SlideId: 0, Link: "invalid/slide/id"}
+		It("", func() {
+			Expect(err).ShouldNot(BeNil())
+			Expect(createResponse).Should(BeNil())
+		})
+	})
+
+	Context("create video sql error", func() {
+		var (
+			createResponse *desc.CreateVideoV1Response
+			err            error
+		)
+
+		BeforeEach(func() {
+			r := repo.NewRepo(sqlxDB, 2)
+			grpcApi := api.NewOcpVideoApi(r)
+
+			createRequest := &desc.CreateVideoV1Request{
+				SlideId: 7,
+				Link:    "42",
+			}
+
+			mock.ExpectQuery("INSERT INTO videos").
+				WithArgs(createRequest.SlideId, createRequest.Link).
+				WillReturnError(errors.New("mock db with different table schema error"))
 
 			createResponse, err = grpcApi.CreateVideoV1(ctx, createRequest)
 		})
