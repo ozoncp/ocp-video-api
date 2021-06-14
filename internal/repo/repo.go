@@ -5,7 +5,6 @@ import (
 	"github.com/Masterminds/squirrel"
 	"github.com/jmoiron/sqlx"
 	"github.com/rs/zerolog/log"
-	"ocp-video-api/internal"
 	"ocp-video-api/internal/models"
 	"ocp-video-api/internal/utils"
 )
@@ -85,19 +84,13 @@ func (r *repo) RemoveVideo(ctx context.Context, ID uint64) error {
 		RunWith(r.db).
 		PlaceholderFormat(squirrel.Dollar)
 
-	result, err := query.ExecContext(ctx)
+	_, err := query.ExecContext(ctx)
 	if err != nil {
 		log.Print("Error deleting video ID", ID, "error", err)
 		return err
 	}
 
-	cnt, err := result.RowsAffected()
-	if cnt >= 1 {
-		return nil
-	} else {
-		log.Print("Error rows affected returned 0, video not found, ID", ID)
-		return internal.ErrIDNotFound
-	}
+	return nil
 }
 
 func (r *repo) GetVideo(ctx context.Context, ID uint64) (*models.Video, error) {
