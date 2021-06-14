@@ -74,4 +74,26 @@ var _ = Describe("Api", func() {
 		})
 	})
 
+	Context("create video invalid argument", func() {
+		var (
+			createRequest  *desc.CreateVideoV1Request
+			createResponse *desc.CreateVideoV1Response
+			grpcApi        desc.OcpVideoApiServer
+		)
+
+		BeforeEach(func() {
+			r := repo.NewRepo(sqlxDB, 2)
+			grpcApi = api.NewOcpVideoApi(r)
+
+			createRequest = &desc.CreateVideoV1Request{SlideId: 0, Link: "invalid/slide/id"}
+
+			createResponse, err = grpcApi.CreateVideoV1(ctx, createRequest)
+		})
+
+		It("", func() {
+			Expect(err).ShouldNot(BeNil())
+			Expect(createResponse).Should(BeNil())
+		})
+	})
+
 })
