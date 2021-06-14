@@ -3,6 +3,7 @@ module ocp-video-api
 go 1.16
 
 require (
+	github.com/DATA-DOG/go-sqlmock v1.5.0
 	github.com/Masterminds/squirrel v1.5.0
 	github.com/cheekybits/genny v1.0.0
 	github.com/davecgh/go-spew v1.1.1
