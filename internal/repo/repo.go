@@ -12,7 +12,7 @@ import (
 const tableName = "videos"
 
 type Repo interface {
-	AddVideos(ctx context.Context, v []models.Video) (int64, error)
+	AddVideos(ctx context.Context, v []models.Video) (uint64, error)
 	AddVideo(ctx context.Context, v *models.Video) (uint64, error)
 	RemoveVideo(ctx context.Context, ID uint64) error
 	GetVideo(ctx context.Context, ID uint64) (*models.Video, error)
@@ -28,11 +28,11 @@ type repo struct {
 	db        *sqlx.DB
 }
 
-func (r *repo) AddVideos(ctx context.Context, vs []models.Video) (int64, error) {
+func (r *repo) AddVideos(ctx context.Context, vs []models.Video) (uint64, error) {
 	log.Print("Adding videos", vs)
 	batches := utils.SliceChunkedModelsVideo(vs, r.chunkSize)
 
-	var pushedCnt int64
+	var pushedCnt uint64
 	for _, batch := range batches {
 		query := squirrel.Insert(tableName).
 			Columns("slide_id", "link").
@@ -54,7 +54,7 @@ func (r *repo) AddVideos(ctx context.Context, vs []models.Video) (int64, error) 
 			log.Print("Error rows affected", batch, "already pushed", pushedCnt, "error", err)
 			return pushedCnt, err
 		}
-		pushedCnt += added
+		pushedCnt += uint64(added)
 	}
 	log.Print("Videos succesfully pushed", pushedCnt)
 	return pushedCnt, nil
