@@ -109,7 +109,7 @@ func (r *repo) GetVideo(ctx context.Context, ID uint64) (*models.Video, error) {
 		PlaceholderFormat(squirrel.Dollar)
 
 	rval := models.Video{}
-	if err := query.QueryRowContext(ctx).Scan(&rval.VideoId, rval.SlideId, rval.Link); err != nil {
+	if err := query.QueryRowContext(ctx).Scan(&rval.VideoId, &rval.SlideId, &rval.Link); err != nil {
 		log.Print("Error retrieving video with ID", ID, "error", err)
 		return nil, err
 	}
