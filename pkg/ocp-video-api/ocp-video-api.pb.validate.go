@@ -194,7 +194,12 @@ func (m *CreateVideoV1Request) Validate() error {
 		return nil
 	}
 
-	// no validation rules for SlideId
+	if m.GetSlideId() <= 0 {
+		return CreateVideoV1RequestValidationError{
+			field:  "SlideId",
+			reason: "value must be greater than 0",
+		}
+	}
 
 	// no validation rules for Link
 
