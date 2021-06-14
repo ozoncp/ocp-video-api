@@ -120,4 +120,82 @@ var _ = Describe("Api", func() {
 		})
 	})
 
+	Context("get video simple", func() {
+		var (
+			videoId uint64 = 1
+			slideId uint64 = 42
+			link           = "/link/to/42"
+
+			getResponse *desc.DescribeVideoV1Response
+			err         error
+		)
+
+		BeforeEach(func() {
+			r := repo.NewRepo(sqlxDB, 2)
+			grpcApi := api.NewOcpVideoApi(r)
+
+			getRequest := &desc.DescribeVideoV1Request{VideoId: 1}
+
+			rows := sqlmock.NewRows([]string{"id", "slide_id", "link"}).
+				AddRow(videoId, slideId, link)
+			mock.ExpectQuery("SELECT (.+) FROM videos WHERE").
+				WithArgs(getRequest.VideoId).
+				WillReturnRows(rows)
+
+			getResponse, err = grpcApi.DescribeVideoV1(ctx, getRequest)
+		})
+
+		It("", func() {
+			Expect(err).Should(BeNil())
+			Expect(getResponse.Video.Id).Should(Equal(videoId))
+			Expect(getResponse.Video.SlideId).Should(Equal(slideId))
+			Expect(getResponse.Video.Link).Should(Equal(link))
+		})
+	})
+
+	Context("get video invalid argument", func() {
+		var (
+			getResponse *desc.DescribeVideoV1Response
+			err         error
+		)
+
+		BeforeEach(func() {
+			r := repo.NewRepo(sqlxDB, 2)
+			grpcApi := api.NewOcpVideoApi(r)
+
+			getRequest := &desc.DescribeVideoV1Request{VideoId: 0}
+
+			getResponse, err = grpcApi.DescribeVideoV1(ctx, getRequest)
+		})
+
+		It("", func() {
+			Expect(err).ShouldNot(BeNil())
+			Expect(getResponse).Should(BeNil())
+		})
+	})
+
+	Context("get video sql error", func() {
+		var (
+			getResponse *desc.DescribeVideoV1Response
+			err         error
+		)
+
+		BeforeEach(func() {
+			r := repo.NewRepo(sqlxDB, 2)
+			grpcApi := api.NewOcpVideoApi(r)
+
+			getRequest := &desc.DescribeVideoV1Request{VideoId: 1}
+
+			mock.ExpectQuery("SELECT (.+) FROM videos WHERE").
+				WithArgs(getRequest.VideoId).
+				WillReturnError(errors.New("mock db with different table schema error"))
+
+			getResponse, err = grpcApi.DescribeVideoV1(ctx, getRequest)
+		})
+
+		It("", func() {
+			Expect(err).ShouldNot(BeNil())
+			Expect(getResponse).Should(BeNil())
+		})
+	})
 })
