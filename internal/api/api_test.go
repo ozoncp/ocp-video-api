@@ -198,4 +198,98 @@ var _ = Describe("Api", func() {
 			Expect(getResponse).Should(BeNil())
 		})
 	})
+
+	Context("remove video", func() {
+		var (
+			videoId uint64 = 1
+			removeResponse *desc.RemoveVideoV1Response
+			err error
+		)
+
+		BeforeEach(func() {
+			r := repo.NewRepo(sqlxDB, 2)
+			grpcApi := api.NewOcpVideoApi(r)
+			removeRequest := &desc.RemoveVideoV1Request{ VideoId: videoId }
+
+			mock.ExpectExec("DELETE FROM videos").
+				WithArgs(removeRequest.VideoId).WillReturnResult(sqlmock.NewResult(0, 1))
+
+			removeResponse, err = grpcApi.RemoveVideoV1(ctx, removeRequest)
+		})
+
+		It("", func() {
+			Expect(err).Should(BeNil())
+			Expect(removeResponse.Found).Should(Equal(true))
+		})
+	})
+
+	// RowsAffected() комментарии: Not every database or database driver may support this
+	// тестируем пессимистичный случай
+	Context("remove video, rowsAffected returns 0", func() {
+		var (
+			videoId uint64 = 1
+			removeResponse *desc.RemoveVideoV1Response
+			err error
+		)
+
+		BeforeEach(func() {
+			r := repo.NewRepo(sqlxDB, 2)
+			grpcApi := api.NewOcpVideoApi(r)
+			removeRequest := &desc.RemoveVideoV1Request{ VideoId: videoId }
+
+			mock.ExpectExec("DELETE FROM videos").
+				WithArgs(removeRequest.VideoId).WillReturnResult(sqlmock.NewResult(0, 0))
+
+			removeResponse, err = grpcApi.RemoveVideoV1(ctx, removeRequest)
+		})
+
+		It("", func() {
+			Expect(err).Should(BeNil())
+			Expect(removeResponse.Found).Should(Equal(true))
+		})
+	})
+
+	Context("remove video invalid argument", func() {
+		var (
+			removeResponse *desc.RemoveVideoV1Response
+			err error
+		)
+
+		BeforeEach(func() {
+			r := repo.NewRepo(sqlxDB, 2)
+			grpcApi := api.NewOcpVideoApi(r)
+			removeRequest := &desc.RemoveVideoV1Request{ VideoId: 0 }
+
+			removeResponse, err = grpcApi.RemoveVideoV1(ctx, removeRequest)
+		})
+
+		It("", func() {
+			Expect(err).ShouldNot(BeNil())
+			Expect(removeResponse).Should(BeNil())
+		})
+	})
+
+	Context("remove video sql error", func() {
+		var (
+			removeResponse *desc.RemoveVideoV1Response
+			err error
+		)
+
+		BeforeEach(func() {
+			r := repo.NewRepo(sqlxDB, 2)
+			grpcApi := api.NewOcpVideoApi(r)
+			removeRequest := &desc.RemoveVideoV1Request{ VideoId: 1 }
+
+			mock.ExpectExec("DELETE FROM videos").
+				WithArgs(removeRequest.VideoId).
+				WillReturnError(errors.New("mock db with different table schema error"))
+
+			removeResponse, err = grpcApi.RemoveVideoV1(ctx, removeRequest)
+		})
+
+		It("", func() {
+			Expect(err).ShouldNot(BeNil())
+			Expect(removeResponse).Should(BeNil())
+		})
+	})
 })
