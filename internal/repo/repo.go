@@ -16,6 +16,7 @@ type Repo interface {
 	AddVideo(ctx context.Context, v *models.Video) (uint64, error)
 	RemoveVideo(ctx context.Context, ID uint64) error
 	GetVideo(ctx context.Context, ID uint64) (*models.Video, error)
+	GetVideos(ctx context.Context, limit, offset uint64) ([]models.Video, error)
 }
 
 func NewRepo(db *sqlx.DB, chunkSize int) Repo {
@@ -109,3 +110,28 @@ func (r *repo) GetVideo(ctx context.Context, ID uint64) (*models.Video, error) {
 
 	return &rval, nil
 }
+
+func (r *repo) GetVideos(ctx context.Context, limit, offset uint64) ([]models.Video, error) {
+	query := squirrel.Select("id", "slide_id", "link").
+		From(tableName).
+		RunWith(r.db).
+		Limit(limit).
+		Offset(offset).
+		PlaceholderFormat(squirrel.Dollar)
+
+	rows, err := query.QueryContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	vs := make([]models.Video, 0, limit)
+	for rows.Next() {
+		var v models.Video
+		if err = rows.Scan(&v.VideoId, &v.SlideId, &v.Link); err != nil {
+			return nil, err
+		}
+		vs = append(vs, v)
+	}
+	return vs[:len(vs):len(vs)], nil
+}
+

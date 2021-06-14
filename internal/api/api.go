@@ -33,23 +33,23 @@ func (a *api) ListVideosV1(
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
-	dst := make([]*desc.Video, req.Limit)
-	for i := req.Offset; i < req.Offset+req.Limit; i++ {
-		v, err := a.repo.GetVideo(ctx, i)
-		if err != nil {
-			log.Print("Error retrieving video with ID", i)
-			break
+	vs, err := a.repo.GetVideos(ctx, req.Limit, req.Offset)
+	if err != nil {
+		log.Print("ListVideosV1 error", vs)
+		return nil, status.Error(codes.Internal, err.Error())
+	} else if len(vs) > 0 {
+		log.Print("ListVideosV1 found", vs)
+		rval := make([]*desc.Video, len(vs))
+		innerRval := make([]desc.Video, len(vs))
+		for i, v := range vs {
+			innerRval[i] = desc.Video{
+				Id:      v.VideoId,
+				SlideId: v.SlideId,
+				Link:    v.Link,
+			}
+			rval[i] = &innerRval[i]
 		}
-		dst = append(dst, &desc.Video{
-			Id:      v.VideoId,
-			SlideId: v.SlideId,
-			Link:    v.Link,
-		})
-	}
-
-	if len(dst) > 0 {
-		log.Print("ListVideosV1 found", dst)
-		return &desc.ListVideosV1Response{Videos: dst}, nil
+		return &desc.ListVideosV1Response{Videos: rval}, nil
 	} else {
 		log.Print("ListVideosV1 no videos are found", req)
 		return nil, status.Error(codes.NotFound, fmt.Sprintf("No videos fount, offset: %v", req.Offset))
