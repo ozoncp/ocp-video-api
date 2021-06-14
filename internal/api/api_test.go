@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/jmoiron/sqlx"
 	. "github.com/onsi/ginkgo"
@@ -290,6 +291,76 @@ var _ = Describe("Api", func() {
 		It("", func() {
 			Expect(err).ShouldNot(BeNil())
 			Expect(removeResponse).Should(BeNil())
+		})
+	})
+
+	Context("list videos", func() {
+		var (
+			limit  uint64 = 10
+			offset uint64 = 0
+
+			listResponse *desc.ListVideosV1Response
+			err error
+			videos = [2]desc.Video{
+				desc.Video{
+					Id: 1,
+					SlideId: 7,
+					Link:    "/link/to/7",
+				},
+				desc.Video{
+					Id: 2,
+					SlideId: 42,
+					Link:    "/link/to/42",
+				},
+			}
+		)
+
+		BeforeEach(func() {
+			r := repo.NewRepo(sqlxDB, 2)
+			grpcApi := api.NewOcpVideoApi(r)
+			listRequest := &desc.ListVideosV1Request{Limit: limit, Offset: offset}
+
+			rows := sqlmock.NewRows([]string{"id", "slide_id", "link"}).
+				AddRow(videos[0].Id, videos[0].SlideId, videos[0].Link).
+				AddRow(videos[1].Id, videos[1].SlideId, videos[1].Link)
+
+			mock.ExpectQuery(
+				fmt.Sprintf("SELECT id, slide_id, link FROM videos LIMIT %d OFFSET %d", limit, offset)).
+				WillReturnRows(rows)
+
+			listResponse, err = grpcApi.ListVideosV1(ctx, listRequest)
+		})
+
+		It("", func() {
+			Expect(err).Should(BeNil())
+			Expect(len(listResponse.Videos)).Should(Equal(len(videos)))
+		})
+	})
+
+	Context("list videos sql error", func() {
+		var (
+			limit  uint64 = 10
+			offset uint64 = 0
+
+			listResponse *desc.ListVideosV1Response
+			err error
+		)
+
+		BeforeEach(func() {
+			r := repo.NewRepo(sqlxDB, 2)
+			grpcApi := api.NewOcpVideoApi(r)
+			listRequest := &desc.ListVideosV1Request{Limit: limit, Offset: offset}
+
+			mock.ExpectQuery(
+				fmt.Sprintf("SELECT id, slide_id, link FROM videos LIMIT %d OFFSET %d", limit, offset)).
+				WillReturnError(errors.New("mock db with different table schema error"))
+
+			listResponse, err = grpcApi.ListVideosV1(ctx, listRequest)
+		})
+
+		It("", func() {
+			Expect(err).ShouldNot(BeNil())
+			Expect(listResponse).Should(BeNil())
 		})
 	})
 })
