@@ -196,7 +196,7 @@ func (m *CreateVideoV1Request) Validate() error {
 
 	// no validation rules for SlideId
 
-	// no validation rules for Description
+	// no validation rules for Link
 
 	return nil
 }
