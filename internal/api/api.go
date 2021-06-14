@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"ocp-video-api/internal/models"
 	"ocp-video-api/internal/repo"
 
 	"github.com/rs/zerolog"
@@ -50,7 +51,7 @@ func (a *api) ListVideosV1(
 		log.Print("ListVideosV1 found", dst)
 		return &desc.ListVideosV1Response{Videos: dst}, nil
 	} else {
-		log.Print("ListVideosV1 no videos found", req)
+		log.Print("ListVideosV1 no videos are found", req)
 		return nil, status.Error(codes.NotFound, fmt.Sprintf("No videos fount, offset: %v", req.Offset))
 	}
 }
@@ -86,7 +87,22 @@ func (a *api) CreateVideoV1(
 	req *desc.CreateVideoV1Request,
 ) (*desc.CreateVideoV1Response, error) {
 	log.Print("CreateVideoV1", req)
-	return nil, nil
+
+	if err := req.Validate(); err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	ID, err := a.repo.AddVideo(ctx, &models.Video{
+		VideoId: 0,
+		SlideId: req.SlideId,
+		Link:    req.Link,
+	})
+	if err != nil {
+		log.Print("CreateVideoV1 video is not created due to error", req, err)
+		return nil, status.Error(codes.Aborted, err.Error())
+	}
+
+	return &desc.CreateVideoV1Response{VideoId: ID}, nil
 }
 
 func (a *api) RemoveVideoV1(
@@ -102,7 +118,7 @@ func (a *api) RemoveVideoV1(
 
 	err := a.repo.RemoveVideo(ctx, req.VideoId)
 	if err != nil {
-		log.Print("RemoveVideoV1 video not removed due to error", req, err)
+		log.Print("RemoveVideoV1 video is not removed due to error", req, err)
 		return nil, status.Error(codes.NotFound, err.Error())
 	}
 
