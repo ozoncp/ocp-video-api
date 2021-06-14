@@ -1,6 +1,7 @@
 package flusher
 
 import (
+	"context"
 	"ocp-video-api/internal"
 	"ocp-video-api/internal/models"
 	"ocp-video-api/internal/repo"
@@ -31,7 +32,7 @@ func (f *flusher) Flush(vs []models.Video) ([]models.Video, error) {
 		if len(vs) < s {
 			s = len(vs)
 		}
-		if err := f.repo.AddVideos(vs[0:s:s]); err != nil {
+		if _, err := f.repo.AddVideos(context.Background(), vs[0:s:s]); err != nil {
 			return vs, err
 		}
 		vs = vs[s:] // TODO: test it carefully
