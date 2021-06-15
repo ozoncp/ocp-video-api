@@ -154,6 +154,32 @@ var _ = Describe("Api", func() {
 		})
 	})
 
+	Context("get video simple sql select return 0 found", func() {
+		var (
+			getResponse *desc.DescribeVideoV1Response
+			err         error
+		)
+
+		BeforeEach(func() {
+			r := repo.NewRepo(sqlxDB, 2)
+			grpcApi := api.NewOcpVideoApi(r)
+
+			getRequest := &desc.DescribeVideoV1Request{VideoId: 1}
+
+			rows := sqlmock.NewRows([]string{"id", "slide_id", "link"})
+			mock.ExpectQuery("SELECT (.+) FROM videos WHERE").
+				WithArgs(getRequest.VideoId).
+				WillReturnRows(rows)
+
+			getResponse, err = grpcApi.DescribeVideoV1(ctx, getRequest)
+		})
+
+		It("", func() {
+			Expect(err).Should(MatchError(ContainSubstring("no rows")))
+			Expect(getResponse).Should(BeNil())
+		})
+	})
+
 	Context("get video invalid argument", func() {
 		var (
 			getResponse *desc.DescribeVideoV1Response
