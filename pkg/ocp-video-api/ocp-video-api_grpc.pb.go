@@ -28,6 +28,8 @@ type OcpVideoApiClient interface {
 	MultiCreateVideoV1(ctx context.Context, in *MultiCreateVideoV1Request, opts ...grpc.CallOption) (*MultiCreateVideoV1Response, error)
 	// Удаляет видео по идентификатору
 	RemoveVideoV1(ctx context.Context, in *RemoveVideoV1Request, opts ...grpc.CallOption) (*RemoveVideoV1Response, error)
+	// Обновляет видео по идентификатору
+	UpdateVideoV1(ctx context.Context, in *UpdateVideoV1Request, opts ...grpc.CallOption) (*UpdateVideoV1Response, error)
 }
 
 type ocpVideoApiClient struct {
@@ -83,6 +85,15 @@ func (c *ocpVideoApiClient) RemoveVideoV1(ctx context.Context, in *RemoveVideoV1
 	return out, nil
 }
 
+func (c *ocpVideoApiClient) UpdateVideoV1(ctx context.Context, in *UpdateVideoV1Request, opts ...grpc.CallOption) (*UpdateVideoV1Response, error) {
+	out := new(UpdateVideoV1Response)
+	err := c.cc.Invoke(ctx, "/ocp.video.api.OcpVideoApi/UpdateVideoV1", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // OcpVideoApiServer is the server API for OcpVideoApi service.
 // All implementations must embed UnimplementedOcpVideoApiServer
 // for forward compatibility
@@ -97,6 +108,8 @@ type OcpVideoApiServer interface {
 	MultiCreateVideoV1(context.Context, *MultiCreateVideoV1Request) (*MultiCreateVideoV1Response, error)
 	// Удаляет видео по идентификатору
 	RemoveVideoV1(context.Context, *RemoveVideoV1Request) (*RemoveVideoV1Response, error)
+	// Обновляет видео по идентификатору
+	UpdateVideoV1(context.Context, *UpdateVideoV1Request) (*UpdateVideoV1Response, error)
 	mustEmbedUnimplementedOcpVideoApiServer()
 }
 
@@ -118,6 +131,9 @@ func (UnimplementedOcpVideoApiServer) MultiCreateVideoV1(context.Context, *Multi
 }
 func (UnimplementedOcpVideoApiServer) RemoveVideoV1(context.Context, *RemoveVideoV1Request) (*RemoveVideoV1Response, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RemoveVideoV1 not implemented")
+}
+func (UnimplementedOcpVideoApiServer) UpdateVideoV1(context.Context, *UpdateVideoV1Request) (*UpdateVideoV1Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateVideoV1 not implemented")
 }
 func (UnimplementedOcpVideoApiServer) mustEmbedUnimplementedOcpVideoApiServer() {}
 
@@ -222,6 +238,24 @@ func _OcpVideoApi_RemoveVideoV1_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
+func _OcpVideoApi_UpdateVideoV1_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateVideoV1Request)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OcpVideoApiServer).UpdateVideoV1(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/ocp.video.api.OcpVideoApi/UpdateVideoV1",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OcpVideoApiServer).UpdateVideoV1(ctx, req.(*UpdateVideoV1Request))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // OcpVideoApi_ServiceDesc is the grpc.ServiceDesc for OcpVideoApi service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -248,6 +282,10 @@ var OcpVideoApi_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "RemoveVideoV1",
 			Handler:    _OcpVideoApi_RemoveVideoV1_Handler,
+		},
+		{
+			MethodName: "UpdateVideoV1",
+			Handler:    _OcpVideoApi_UpdateVideoV1_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

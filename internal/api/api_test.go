@@ -522,4 +522,78 @@ var _ = Describe("Api", func() {
 			Expect(multiCreateResponse.Count).Should(Equal(uint64(len(multiCreateRequest.Videos))))
 		})
 	})
+
+	Context("update video", func() {
+		var (
+			updateResponse *desc.UpdateVideoV1Response
+			err error
+		)
+
+		BeforeEach(func() {
+			r := repo.NewRepo(sqlxDB, 2)
+			grpcApi := api.NewOcpVideoApi(r)
+			updateRequest := &desc.UpdateVideoV1Request{
+				Video: &desc.Video{Id: 1, SlideId: 7, Link: "/video/7"},
+			}
+
+			mock.ExpectExec("UPDATE videos SET").
+				WithArgs(updateRequest.Video.SlideId, updateRequest.Video.Link, updateRequest.Video.Id).
+				WillReturnResult(sqlmock.NewResult(0, 1))
+
+			updateResponse, err = grpcApi.UpdateVideoV1(ctx, updateRequest)
+		})
+
+		It("", func() {
+			Expect(err).Should(BeNil())
+			Expect(updateResponse.Found).Should(Equal(true))
+		})
+	})
+
+	Context("update video invalid argument", func() {
+		var (
+			updateResponse *desc.UpdateVideoV1Response
+			err error
+		)
+
+		BeforeEach(func() {
+			r := repo.NewRepo(sqlxDB, 2)
+			grpcApi := api.NewOcpVideoApi(r)
+			updateRequest := &desc.UpdateVideoV1Request{
+				Video: &desc.Video{Id: 0, SlideId: 0, Link: "/invalid/id"},
+			}
+
+			updateResponse, err = grpcApi.UpdateVideoV1(ctx, updateRequest)
+		})
+
+		It("", func() {
+			Expect(err).ShouldNot(BeNil())
+			Expect(updateResponse).Should(BeNil())
+		})
+	})
+
+	Context("update video sql error", func() {
+		var (
+			updateResponse *desc.UpdateVideoV1Response
+			err error
+		)
+
+		BeforeEach(func() {
+			r := repo.NewRepo(sqlxDB, 2)
+			grpcApi := api.NewOcpVideoApi(r)
+			updateRequest := &desc.UpdateVideoV1Request{
+				Video: &desc.Video{Id: 0, SlideId: 0, Link: "/invalid/id"},
+			}
+
+			mock.ExpectExec("UPDATE videos SET").
+				WithArgs(updateRequest.Video.SlideId, updateRequest.Video.Link, updateRequest.Video.Id).
+				WillReturnError(errors.New("mock db with different table schema error"))
+
+			updateResponse, err = grpcApi.UpdateVideoV1(ctx, updateRequest)
+		})
+
+		It("", func() {
+			Expect(err).ShouldNot(BeNil())
+			Expect(updateResponse).Should(BeNil())
+		})
+	})
 })

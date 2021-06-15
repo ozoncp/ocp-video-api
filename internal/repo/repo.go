@@ -13,10 +13,11 @@ const tableName = "videos"
 
 type Repo interface {
 	AddVideos(ctx context.Context, v []models.Video) (uint64, error)
-	AddVideo(ctx context.Context, v *models.Video) (uint64, error)
+	AddVideo(ctx context.Context, v models.Video) (uint64, error)
 	RemoveVideo(ctx context.Context, ID uint64) error
 	GetVideo(ctx context.Context, ID uint64) (*models.Video, error)
 	GetVideos(ctx context.Context, limit, offset uint64) ([]models.Video, error)
+	UpdateVideo(ctx context.Context, v models.Video) error
 }
 
 func NewRepo(db *sqlx.DB, chunkSize int) Repo {
@@ -60,8 +61,8 @@ func (r *repo) AddVideos(ctx context.Context, vs []models.Video) (uint64, error)
 	return pushedCnt, nil
 }
 
-func (r *repo) AddVideo(ctx context.Context, v *models.Video) (uint64, error) {
-	log.Print("Adding single video", *v)
+func (r *repo) AddVideo(ctx context.Context, v models.Video) (uint64, error) {
+	log.Print("Adding single video", v)
 	query := squirrel.Insert(tableName).
 		Columns("slide_id", "link").
 		Values(v.SlideId, v.Link).
@@ -135,3 +136,14 @@ func (r *repo) GetVideos(ctx context.Context, limit, offset uint64) ([]models.Vi
 	return vs[:len(vs):len(vs)], nil
 }
 
+func (r *repo) UpdateVideo(ctx context.Context, v models.Video) error {
+	query := squirrel.Update(tableName).
+		Set("slide_id", v.SlideId).
+		Set("link", v.Link).
+		Where(squirrel.Eq{"id": v.VideoId}).
+		RunWith(r.db).
+		PlaceholderFormat(squirrel.Dollar)
+
+	_, err := query.ExecContext(ctx)
+	return err
+}

@@ -45,6 +45,13 @@ service OcpVideoApi {
             delete: "/v1/videos/{video_id}"
         };
     }
+
+  // Обновляет видео по идентификатору
+  rpc UpdateVideoV1(UpdateVideoV1Request) returns (UpdateVideoV1Response) {
+    option (google.api.http) = {
+      post: "/v1/videos/update/{video.id}"
+    };
+  }
 }
 
 message ListVideosV1Request {
@@ -87,6 +94,14 @@ message DescribeVideoV1Request {
 
 message DescribeVideoV1Response {
     Video video = 1;
+}
+
+message UpdateVideoV1Request {
+  Video video = 1;
+}
+
+message UpdateVideoV1Response {
+  bool found = 1;
 }
 
 // Описание видео
