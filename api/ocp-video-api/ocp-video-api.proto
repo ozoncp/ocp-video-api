@@ -5,7 +5,7 @@ import "github.com/envoyproxy/protoc-gen-validate/validate/validate.proto";
 
 package ocp.video.api;
 
-option go_package = "ocp-video-api/pkg/ocp-video-api;oct_video_api";
+option go_package = "ocp-video-api/pkg/ocp-video-api;ocp_video_api";
 
 // Описание видео
 
@@ -50,8 +50,8 @@ message ListVideosV1Response {
 }
 
 message CreateVideoV1Request {
-    uint64 slide_id = 1;
-    string description = 2;
+    uint64 slide_id = 1 [(validate.rules).uint64.gt = 0];
+    string link = 2;
 }
 
 message CreateVideoV1Response {

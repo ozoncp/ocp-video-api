@@ -7,9 +7,12 @@ import (
 	"log"
 	"net"
 	"net/http"
-
 	"ocp-video-api/internal/api"
+	"ocp-video-api/internal/repo"
 	desc "ocp-video-api/pkg/ocp-video-api"
+
+	"github.com/jmoiron/sqlx"
+	_ "github.com/lib/pq"
 
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"google.golang.org/grpc"
@@ -18,6 +21,8 @@ import (
 const (
 	grpcPort = ":7002"
 	httpPort = ":7000"
+
+	chunkSize = 7
 )
 
 var (
@@ -52,8 +57,15 @@ func runGrpc() {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
+	db, err := sqlx.Connect("postgres",
+		"postgres://goland:goland@db:5432/goland?sslmode=disable")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
 	s := grpc.NewServer()
-	desc.RegisterOcpVideoApiServer(s, api.NewOcpVideoApi())
+	desc.RegisterOcpVideoApiServer(s, api.NewOcpVideoApi(repo.NewRepo(db, chunkSize)))
 
 	fmt.Printf("Server listening on %s\n", *grpcEndpoint)
 	if err := s.Serve(listen); err != nil {

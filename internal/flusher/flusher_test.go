@@ -1,6 +1,7 @@
 package flusher_test
 
 import (
+	"context"
 	"errors"
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
@@ -37,7 +38,7 @@ var _ = Describe("Flusher", func() {
 		}
 		It("", func() {
 			f = flusher.New(2, mockRepo)
-			mockRepo.EXPECT().AddVideos(gomock.Any()).Return(nil).Times(1)
+			mockRepo.EXPECT().AddVideos(gomock.Any(), gomock.Any()).Return(uint64(1), nil).Times(1)
 			rest, err := f.Flush(in)
 			Expect(rest).Should(BeNil())
 			Expect(err).Should(BeNil())
@@ -59,7 +60,7 @@ var _ = Describe("Flusher", func() {
 		}
 		It("", func() {
 			f = flusher.New(2, mockRepo)
-			mockRepo.EXPECT().AddVideos(gomock.Any()).Return(nil).Times(1)
+			mockRepo.EXPECT().AddVideos(gomock.Any(), gomock.Any()).Return(uint64(2), nil).Times(1)
 			rest, err := f.Flush(in)
 			Expect(rest).Should(BeNil())
 			Expect(err).Should(BeNil())
@@ -86,7 +87,8 @@ var _ = Describe("Flusher", func() {
 		}
 		It("", func() {
 			f = flusher.New(2, mockRepo)
-			mockRepo.EXPECT().AddVideos(gomock.Any()).Return(nil).Times(2)
+			mockRepo.EXPECT().AddVideos(gomock.Any(), gomock.Any()).Return(uint64(2), nil).Times(1)
+			mockRepo.EXPECT().AddVideos(gomock.Any(), gomock.Any()).Return(uint64(1), nil).Times(1)
 			rest, err := f.Flush(in)
 			Expect(rest).Should(BeNil())
 			Expect(err).Should(BeNil())
@@ -114,7 +116,7 @@ var _ = Describe("Flusher", func() {
 			}
 
 			f = flusher.New(0, mockRepo)
-			mockRepo.EXPECT().AddVideos(gomock.Any()).Return(nil).Times(0)
+			mockRepo.EXPECT().AddVideos(gomock.Any(), gomock.Any()).Return(uint64(0), nil).Times(0)
 			rest, err := f.Flush(in)
 			Expect(rest).Should(BeEquivalentTo(in))
 			Expect(err).Should(BeIdenticalTo(internal.ErrInvalidSize))
@@ -122,7 +124,7 @@ var _ = Describe("Flusher", func() {
 
 		It("returns original slice and error on nil, passed as slice if chunk size is ok", func() {
 			f = flusher.New(2, mockRepo)
-			mockRepo.EXPECT().AddVideos(gomock.Any()).Return(nil).Times(0)
+			mockRepo.EXPECT().AddVideos(gomock.Any(), gomock.Any()).Return(uint64(0), nil).Times(0)
 			rest, err := f.Flush(nil)
 			Expect(rest).Should(BeNil())
 			Expect(err).Should(BeNil())
@@ -159,13 +161,13 @@ var _ = Describe("Flusher", func() {
 			f = flusher.New(1, mockRepo)
 
 			idx, failOn := 0, 2
-			mockRepo.EXPECT().AddVideos(gomock.Any()).DoAndReturn(
-				func(vs []models.Video) error {
+			mockRepo.EXPECT().AddVideos(gomock.Any(), gomock.Any()).DoAndReturn(
+				func(ctx context.Context, vs []models.Video) (uint64, error) {
 					if idx == failOn {
-						return someErr
+						return uint64(0), someErr
 					}
 					idx++
-					return nil
+					return uint64(1), nil
 				},
 			).Times(3)
 

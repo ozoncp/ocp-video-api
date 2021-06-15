@@ -2,11 +2,11 @@
 // source: api/ocp-video-api/ocp-video-api.proto
 
 /*
-Package oct_video_api is a reverse proxy.
+Package ocp_video_api is a reverse proxy.
 
 It translates gRPC into RESTful JSON APIs.
 */
-package oct_video_api
+package ocp_video_api
 
 import (
 	"context"
