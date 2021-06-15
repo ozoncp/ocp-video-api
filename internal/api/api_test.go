@@ -9,6 +9,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"ocp-video-api/internal/models"
 	"ocp-video-api/internal/repo"
 	desc "ocp-video-api/pkg/ocp-video-api"
 
@@ -151,32 +152,6 @@ var _ = Describe("Api", func() {
 			Expect(getResponse.Video.Id).Should(Equal(videoId))
 			Expect(getResponse.Video.SlideId).Should(Equal(slideId))
 			Expect(getResponse.Video.Link).Should(Equal(link))
-		})
-	})
-
-	Context("get video simple sql select return 0 found", func() {
-		var (
-			getResponse *desc.DescribeVideoV1Response
-			err         error
-		)
-
-		BeforeEach(func() {
-			r := repo.NewRepo(sqlxDB, 2)
-			grpcApi := api.NewOcpVideoApi(r)
-
-			getRequest := &desc.DescribeVideoV1Request{VideoId: 1}
-
-			rows := sqlmock.NewRows([]string{"id", "slide_id", "link"})
-			mock.ExpectQuery("SELECT (.+) FROM videos WHERE").
-				WithArgs(getRequest.VideoId).
-				WillReturnRows(rows)
-
-			getResponse, err = grpcApi.DescribeVideoV1(ctx, getRequest)
-		})
-
-		It("", func() {
-			Expect(err).Should(MatchError(ContainSubstring("no rows")))
-			Expect(getResponse).Should(BeNil())
 		})
 	})
 
@@ -390,32 +365,161 @@ var _ = Describe("Api", func() {
 		})
 	})
 
-	Context("list videos sql select return 0 found", func() {
+	Context("multicreate videos", func() {
 		var (
-			limit  uint64 = 10
-			offset uint64 = 1000
-
-			listResponse *desc.ListVideosV1Response
+			vs = [2]models.Video {
+				{
+					VideoId: 1,
+					SlideId: 7,
+					Link:    "/video/7",
+				},
+				{
+					VideoId: 2,
+					SlideId: 42,
+					Link:    "/video/42",
+				},
+			}
+			multiCreateRequest *desc.MultiCreateVideoV1Request
+			multiCreateResponse *desc.MultiCreateVideoV1Response
 			err error
 		)
 
 		BeforeEach(func() {
 			r := repo.NewRepo(sqlxDB, 2)
 			grpcApi := api.NewOcpVideoApi(r)
-			listRequest := &desc.ListVideosV1Request{Limit: limit, Offset: offset}
+			multiCreateRequest = &desc.MultiCreateVideoV1Request{
+				Videos: []*desc.NewVideo{
+					{
+						SlideId: vs[0].SlideId,
+						Link: vs[0].Link,
+					},
+					{
+						SlideId: vs[1].SlideId,
+						Link: vs[1].Link,
+					},
+				},
+			}
 
-			rows := sqlmock.NewRows([]string{"id", "slide_id", "link"})
+			mock.ExpectExec("INSERT INTO videos").
+				WithArgs(vs[0].SlideId, vs[0].Link, vs[1].SlideId, vs[1].Link).
+				WillReturnResult(sqlmock.NewResult(2, 2))
 
-			mock.ExpectQuery(
-				fmt.Sprintf("SELECT id, slide_id, link FROM videos LIMIT %d OFFSET %d", limit, offset)).
-				WillReturnRows(rows)
-
-			listResponse, err = grpcApi.ListVideosV1(ctx, listRequest)
+			multiCreateResponse, err = grpcApi.MultiCreateVideoV1(ctx, multiCreateRequest)
 		})
 
 		It("", func() {
 			Expect(err).Should(BeNil())
-			Expect(len(listResponse.Videos)).Should(Equal(0))
+			Expect(multiCreateResponse.Count).Should(Equal(uint64(len(multiCreateRequest.Videos))))
+		})
+	})
+
+	Context("multicreate videos invalid argument", func() {
+		var (
+			multiCreateResponse *desc.MultiCreateVideoV1Response
+			err error
+		)
+
+		BeforeEach(func() {
+			r := repo.NewRepo(sqlxDB, 2)
+			grpcApi := api.NewOcpVideoApi(r)
+			multiCreateRequest := &desc.MultiCreateVideoV1Request{
+				Videos: []*desc.NewVideo{
+					{
+						SlideId: 0,
+						Link: "/invalid/slide/id",
+					},
+				},
+			}
+
+			multiCreateResponse, err = grpcApi.MultiCreateVideoV1(ctx, multiCreateRequest)
+		})
+
+		It("", func() {
+			Expect(err).ShouldNot(BeNil())
+			Expect(multiCreateResponse).Should(BeNil())
+		})
+	})
+
+	Context("multicreate videos sql error", func() {
+		var (
+			multiCreateResponse *desc.MultiCreateVideoV1Response
+			err error
+		)
+
+		BeforeEach(func() {
+			r := repo.NewRepo(sqlxDB, 2)
+			grpcApi := api.NewOcpVideoApi(r)
+			multiCreateRequest := &desc.MultiCreateVideoV1Request{
+				Videos: []*desc.NewVideo{
+					{
+						SlideId: 7,
+						Link: "/link/7",
+					},
+				},
+			}
+
+			mock.ExpectExec("INSERT INTO videos").
+				WithArgs(sqlmock.AnyArg(), sqlmock.AnyArg()).
+				WillReturnError(errors.New("mock db with different table schema error"))
+
+			multiCreateResponse, err = grpcApi.MultiCreateVideoV1(ctx, multiCreateRequest)
+		})
+
+		It("", func() {
+			Expect(err).ShouldNot(BeNil())
+			Expect(multiCreateResponse).Should(BeNil())
+		})
+	})
+
+	Context("multicreate videos batched", func() {
+		var (
+			vs = [2]models.Video {
+				{
+					VideoId: 1,
+					SlideId: 7,
+					Link:    "/video/7",
+				},
+				{
+					VideoId: 2,
+					SlideId: 42,
+					Link:    "/video/42",
+				},
+			}
+			multiCreateRequest *desc.MultiCreateVideoV1Request
+			multiCreateResponse *desc.MultiCreateVideoV1Response
+			err error
+		)
+
+		BeforeEach(func() {
+			r := repo.NewRepo(sqlxDB, 1)
+			grpcApi := api.NewOcpVideoApi(r)
+			multiCreateRequest = &desc.MultiCreateVideoV1Request{
+				Videos: []*desc.NewVideo{
+					{
+						SlideId: vs[0].SlideId,
+						Link: vs[0].Link,
+					},
+					{
+						SlideId: vs[1].SlideId,
+						Link: vs[1].Link,
+					},
+				},
+			}
+
+			mock.ExpectExec("INSERT INTO videos").
+				WithArgs(vs[0].SlideId, vs[0].Link).
+				WillReturnResult(sqlmock.NewResult(1, 1))
+
+			mock.ExpectExec("INSERT INTO videos").
+				WithArgs(vs[1].SlideId, vs[1].Link).
+				WillReturnResult(sqlmock.NewResult(2, 1))
+
+			multiCreateResponse, err = grpcApi.MultiCreateVideoV1(ctx, multiCreateRequest)
+		})
+
+		It("", func() {
+			Expect(err).Should(BeNil())
+			Expect(multiCreateResponse.Count).Should(Equal(uint64(len(multiCreateRequest.Videos))))
 		})
 	})
 })

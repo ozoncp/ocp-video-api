@@ -94,10 +94,35 @@ func (a *api) CreateVideoV1(
 	})
 	if err != nil {
 		log.Print("CreateVideoV1 video is not created due to error", req, err)
-		return nil, status.Error(codes.Aborted, err.Error())
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	return &desc.CreateVideoV1Response{VideoId: ID}, nil
+}
+
+func (a *api) MultiCreateVideoV1(
+	ctx context.Context,
+	req *desc.MultiCreateVideoV1Request,
+) (*desc.MultiCreateVideoV1Response, error) {
+	log.Print("MultiCreateVideoV1", req)
+
+	if err := req.Validate(); err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	vs := make([]models.Video, len(req.Videos))
+	for i, v := range req.Videos {
+		vs[i].SlideId = v.SlideId
+		vs[i].Link = v.Link
+	}
+
+	cnt, err := a.repo.AddVideos(ctx, vs)
+	if err != nil {
+		log.Print("MultiCreateVideoV1 video is not created due to error", req, err, "created", cnt)
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &desc.MultiCreateVideoV1Response{ Count: cnt }, nil
 }
 
 func (a *api) RemoveVideoV1(

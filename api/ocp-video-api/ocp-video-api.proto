@@ -32,6 +32,13 @@ service OcpVideoApi {
         };
     }
 
+    // Создаёт новые видео (с батчингом)
+    rpc MultiCreateVideoV1(MultiCreateVideoV1Request) returns (MultiCreateVideoV1Response) {
+        option (google.api.http) = {
+          post: "/videos/multi"
+        };
+    }
+
     // Удаляет видео по идентификатору
     rpc RemoveVideoV1(RemoveVideoV1Request) returns (RemoveVideoV1Response) {
         option (google.api.http) = {
@@ -58,6 +65,14 @@ message CreateVideoV1Response {
     uint64 video_id = 1;
 }
 
+message MultiCreateVideoV1Request {
+  repeated NewVideo videos = 1;
+}
+
+message MultiCreateVideoV1Response {
+  uint64 count = 1;
+}
+
 message RemoveVideoV1Request {
     uint64 video_id = 1 [(validate.rules).uint64.gt = 0];
 }
@@ -79,4 +94,10 @@ message Video {
     uint64 id = 1;
     uint64 slide_id = 2;
     string link = 3;
+}
+
+// Описание экземпляра запроса создание видео в батче MultiCreate
+message NewVideo {
+  uint64 slide_id = 1 [(validate.rules).uint64.gt = 0];
+  string link = 2;
 }
