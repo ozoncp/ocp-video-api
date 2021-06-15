@@ -363,4 +363,33 @@ var _ = Describe("Api", func() {
 			Expect(listResponse).Should(BeNil())
 		})
 	})
+
+	Context("list videos sql select return 0 found", func() {
+		var (
+			limit  uint64 = 10
+			offset uint64 = 1000
+
+			listResponse *desc.ListVideosV1Response
+			err error
+		)
+
+		BeforeEach(func() {
+			r := repo.NewRepo(sqlxDB, 2)
+			grpcApi := api.NewOcpVideoApi(r)
+			listRequest := &desc.ListVideosV1Request{Limit: limit, Offset: offset}
+
+			rows := sqlmock.NewRows([]string{"id", "slide_id", "link"})
+
+			mock.ExpectQuery(
+				fmt.Sprintf("SELECT id, slide_id, link FROM videos LIMIT %d OFFSET %d", limit, offset)).
+				WillReturnRows(rows)
+
+			listResponse, err = grpcApi.ListVideosV1(ctx, listRequest)
+		})
+
+		It("", func() {
+			Expect(err).Should(BeNil())
+			Expect(len(listResponse.Videos)).Should(Equal(0))
+		})
+	})
 })

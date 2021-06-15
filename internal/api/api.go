@@ -2,7 +2,6 @@ package api
 
 import (
 	"context"
-	"fmt"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"ocp-video-api/internal/models"
@@ -37,23 +36,19 @@ func (a *api) ListVideosV1(
 	if err != nil {
 		log.Print("ListVideosV1 error", vs)
 		return nil, status.Error(codes.Internal, err.Error())
-	} else if len(vs) > 0 {
-		log.Print("ListVideosV1 found", vs)
-		rval := make([]*desc.Video, len(vs))
-		innerRval := make([]desc.Video, len(vs))
-		for i, v := range vs {
-			innerRval[i] = desc.Video{
-				Id:      v.VideoId,
-				SlideId: v.SlideId,
-				Link:    v.Link,
-			}
-			rval[i] = &innerRval[i]
-		}
-		return &desc.ListVideosV1Response{Videos: rval}, nil
-	} else {
-		log.Print("ListVideosV1 no videos are found", req)
-		return nil, status.Error(codes.NotFound, fmt.Sprintf("No videos fount, offset: %v", req.Offset))
 	}
+	log.Print("ListVideosV1 found", vs)
+	rval := make([]*desc.Video, len(vs))
+	innerRval := make([]desc.Video, len(vs))
+	for i, v := range vs {
+		innerRval[i] = desc.Video{
+			Id:      v.VideoId,
+			SlideId: v.SlideId,
+			Link:    v.Link,
+		}
+		rval[i] = &innerRval[i]
+	}
+	return &desc.ListVideosV1Response{Videos: rval}, nil
 }
 
 func (a *api) DescribeVideoV1(
