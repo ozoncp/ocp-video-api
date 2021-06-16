@@ -2,8 +2,10 @@ package repo
 
 import (
 	"context"
+	"fmt"
 	"github.com/Masterminds/squirrel"
 	"github.com/jmoiron/sqlx"
+	"github.com/opentracing/opentracing-go"
 	"github.com/rs/zerolog/log"
 	"ocp-video-api/internal/models"
 	"ocp-video-api/internal/utils"
@@ -30,35 +32,50 @@ type repo struct {
 }
 
 func (r *repo) AddVideos(ctx context.Context, vs []models.Video) (uint64, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, fmt.Sprintf("Adding %v videos", len(vs)))
+	defer span.Finish()
+
 	log.Print("Adding videos", vs)
 	batches := utils.SliceChunkedModelsVideo(vs, r.chunkSize)
 
 	var pushedCnt uint64
 	for _, batch := range batches {
-		query := squirrel.Insert(tableName).
-			Columns("slide_id", "link").
-			RunWith(r.db).
-			PlaceholderFormat(squirrel.Dollar)
-
-		for _, v := range batch {
-			query = query.Values(v.SlideId, v.Link)
-		}
-
-		rc, err := query.ExecContext(ctx)
+		added, err := r.createBatch(ctx, batch)
 		if err != nil {
-			log.Print("Error pushing batch", batch, "already pushed", pushedCnt, "error", err)
 			return pushedCnt, err
 		}
-
-		added, err := rc.RowsAffected()
-		if err != nil {
-			log.Print("Error rows affected", batch, "already pushed", pushedCnt, "error", err)
-			return pushedCnt, err
-		}
-		pushedCnt += uint64(added)
+		pushedCnt += added
 	}
 	log.Print("Videos succesfully pushed", pushedCnt)
 	return pushedCnt, nil
+}
+
+func (r *repo) createBatch(ctx context.Context, batch []models.Video) (uint64, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, fmt.Sprintf("Create batch with %v videos", len(batch)))
+	defer span.Finish()
+
+	query := squirrel.Insert(tableName).
+		Columns("slide_id", "link").
+		RunWith(r.db).
+		PlaceholderFormat(squirrel.Dollar)
+
+	for _, v := range batch {
+		query = query.Values(v.SlideId, v.Link)
+	}
+
+	rc, err := query.ExecContext(ctx)
+	if err != nil {
+		log.Print("Error pushing batch", batch, "error", err)
+		return 0, err
+	}
+
+	added, err := rc.RowsAffected()
+	if err != nil {
+		log.Print("Error rows affected", batch, "error", err)
+		return 0, err
+	}
+
+	return uint64(added), nil
 }
 
 func (r *repo) AddVideo(ctx context.Context, v models.Video) (uint64, error) {

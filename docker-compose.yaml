@@ -1,22 +1,10 @@
 version: "3"
 services:
-  videoapi:
-    container_name: video-api
-    build: ./
-    ports:
-      - "7000:8000"
-      - "7002:8002"
-    environment:
-      DD_DB_HOST: db
-    command: /server
-    restart: always
-    depends_on:
-      - db
   db:
     container_name: video-db
     image: postgres
-#    ports:
-#      - "5432:5432"
+    ports:
+      - "5432:5432"
     environment:
       POSTGRES_USER: goland
       POSTGRES_PASSWORD: goland
@@ -24,3 +12,9 @@ services:
     restart: always
     volumes:
       - .pgdata:/data/postgres
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    ports:
+      - "localhost:6831:6831/udp"
+      - "16686:16686"

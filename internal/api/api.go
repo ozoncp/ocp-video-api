@@ -2,13 +2,14 @@ package api
 
 import (
 	"context"
+	"fmt"
+	"github.com/opentracing/opentracing-go"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"ocp-video-api/internal/models"
 	"ocp-video-api/internal/repo"
-
-	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 	desc "ocp-video-api/pkg/ocp-video-api"
 )
 
@@ -104,6 +105,9 @@ func (a *api) MultiCreateVideoV1(
 	ctx context.Context,
 	req *desc.MultiCreateVideoV1Request,
 ) (*desc.MultiCreateVideoV1Response, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, fmt.Sprintf("Request to create %v videos", len(req.Videos)))
+	defer span.Finish()
+
 	log.Print("MultiCreateVideoV1", req)
 
 	if err := req.Validate(); err != nil {
