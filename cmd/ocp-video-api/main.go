@@ -8,6 +8,7 @@ import (
 	"net"
 	"net/http"
 	"ocp-video-api/internal/api"
+	"ocp-video-api/internal/producer"
 	"ocp-video-api/internal/repo"
 	desc "ocp-video-api/pkg/ocp-video-api"
 
@@ -65,7 +66,11 @@ func runGrpc() {
 	}
 
 	s := grpc.NewServer()
-	desc.RegisterOcpVideoApiServer(s, api.NewOcpVideoApi(repo.NewRepo(db, chunkSize)))
+	p, err := producer.NewProducer(16, producer.NewSaramaSender("ocp", "video"))
+	if err != nil {
+		panic(fmt.Sprintf("can't create producer, error: %v", err))
+	}
+	desc.RegisterOcpVideoApiServer(s, api.NewOcpVideoApi(repo.NewRepo(db, chunkSize), p))
 
 	fmt.Printf("Server listening on %s\n", *grpcEndpoint)
 	if err := s.Serve(listen); err != nil {

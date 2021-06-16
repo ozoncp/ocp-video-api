@@ -6,15 +6,18 @@ import (
 	"errors"
 	"fmt"
 	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/golang/mock/gomock"
 	"github.com/jmoiron/sqlx"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"ocp-video-api/internal/api"
+	mockpkg "ocp-video-api/internal/mock"
 	"ocp-video-api/internal/models"
 	"ocp-video-api/internal/repo"
 	desc "ocp-video-api/pkg/ocp-video-api"
-
-	"ocp-video-api/internal/api"
 )
+
+//TODO: добавить в тесты моки producer.Producer
 
 var _ = Describe("Api", func() {
 	var (
@@ -23,6 +26,9 @@ var _ = Describe("Api", func() {
 		db     *sql.DB
 		sqlxDB *sqlx.DB
 		mock   sqlmock.Sqlmock
+
+		ctrl     *gomock.Controller
+		mockProd *mockpkg.MockProducer
 
 		err error
 	)
@@ -34,15 +40,16 @@ var _ = Describe("Api", func() {
 		Expect(err).Should(BeNil())
 
 		sqlxDB = sqlx.NewDb(db, "sqlmock")
-	})
 
-	JustBeforeEach(func() {
+		ctrl = gomock.NewController(GinkgoT())
+		mockProd = mockpkg.NewMockProducer(ctrl)
 	})
 
 	AfterEach(func() {
 		mock.ExpectClose()
 		err = db.Close()
 		Expect(err).Should(BeNil())
+		ctrl.Finish()
 	})
 
 	Context("create video", func() {
@@ -53,7 +60,7 @@ var _ = Describe("Api", func() {
 
 		BeforeEach(func() {
 			r := repo.NewRepo(sqlxDB, 2)
-			grpcApi := api.NewOcpVideoApi(r)
+			grpcApi := api.NewOcpVideoApi(r, mockProd)
 
 			createRequest := &desc.CreateVideoV1Request{
 				SlideId: 42,
@@ -65,6 +72,7 @@ var _ = Describe("Api", func() {
 			mock.ExpectQuery("INSERT INTO videos").
 				WithArgs(createRequest.SlideId, createRequest.Link).
 				WillReturnRows(rows)
+			mockProd.EXPECT().SendEvent(gomock.Any()).Return(nil)
 
 			createResponse, err = grpcApi.CreateVideoV1(ctx, createRequest)
 		})
@@ -83,7 +91,7 @@ var _ = Describe("Api", func() {
 
 		BeforeEach(func() {
 			r := repo.NewRepo(sqlxDB, 2)
-			grpcApi := api.NewOcpVideoApi(r)
+			grpcApi := api.NewOcpVideoApi(r, mockProd)
 			createRequest := &desc.CreateVideoV1Request{SlideId: 0, Link: "invalid/slide/id"}
 			createResponse, err = grpcApi.CreateVideoV1(ctx, createRequest)
 		})
@@ -102,7 +110,7 @@ var _ = Describe("Api", func() {
 
 		BeforeEach(func() {
 			r := repo.NewRepo(sqlxDB, 2)
-			grpcApi := api.NewOcpVideoApi(r)
+			grpcApi := api.NewOcpVideoApi(r, mockProd)
 
 			createRequest := &desc.CreateVideoV1Request{
 				SlideId: 7,
@@ -134,7 +142,7 @@ var _ = Describe("Api", func() {
 
 		BeforeEach(func() {
 			r := repo.NewRepo(sqlxDB, 2)
-			grpcApi := api.NewOcpVideoApi(r)
+			grpcApi := api.NewOcpVideoApi(r, mockProd)
 
 			getRequest := &desc.DescribeVideoV1Request{VideoId: 1}
 
@@ -163,7 +171,7 @@ var _ = Describe("Api", func() {
 
 		BeforeEach(func() {
 			r := repo.NewRepo(sqlxDB, 2)
-			grpcApi := api.NewOcpVideoApi(r)
+			grpcApi := api.NewOcpVideoApi(r, mockProd)
 
 			getRequest := &desc.DescribeVideoV1Request{VideoId: 0}
 
@@ -184,7 +192,7 @@ var _ = Describe("Api", func() {
 
 		BeforeEach(func() {
 			r := repo.NewRepo(sqlxDB, 2)
-			grpcApi := api.NewOcpVideoApi(r)
+			grpcApi := api.NewOcpVideoApi(r, mockProd)
 
 			getRequest := &desc.DescribeVideoV1Request{VideoId: 1}
 
@@ -203,18 +211,19 @@ var _ = Describe("Api", func() {
 
 	Context("remove video", func() {
 		var (
-			videoId uint64 = 1
+			videoId        uint64 = 1
 			removeResponse *desc.RemoveVideoV1Response
-			err error
+			err            error
 		)
 
 		BeforeEach(func() {
 			r := repo.NewRepo(sqlxDB, 2)
-			grpcApi := api.NewOcpVideoApi(r)
-			removeRequest := &desc.RemoveVideoV1Request{ VideoId: videoId }
+			grpcApi := api.NewOcpVideoApi(r, mockProd)
+			removeRequest := &desc.RemoveVideoV1Request{VideoId: videoId}
 
 			mock.ExpectExec("DELETE FROM videos").
 				WithArgs(removeRequest.VideoId).WillReturnResult(sqlmock.NewResult(0, 1))
+			mockProd.EXPECT().SendEvent(gomock.Any()).Return(nil)
 
 			removeResponse, err = grpcApi.RemoveVideoV1(ctx, removeRequest)
 		})
@@ -229,18 +238,20 @@ var _ = Describe("Api", func() {
 	// тестируем пессимистичный случай
 	Context("remove video, rowsAffected returns 0", func() {
 		var (
-			videoId uint64 = 1
+			videoId        uint64 = 1
 			removeResponse *desc.RemoveVideoV1Response
-			err error
+			err            error
 		)
 
 		BeforeEach(func() {
 			r := repo.NewRepo(sqlxDB, 2)
-			grpcApi := api.NewOcpVideoApi(r)
-			removeRequest := &desc.RemoveVideoV1Request{ VideoId: videoId }
+			grpcApi := api.NewOcpVideoApi(r, mockProd)
+			removeRequest := &desc.RemoveVideoV1Request{VideoId: videoId}
 
 			mock.ExpectExec("DELETE FROM videos").
 				WithArgs(removeRequest.VideoId).WillReturnResult(sqlmock.NewResult(0, 0))
+
+			mockProd.EXPECT().SendEvent(gomock.Any()).Return(nil)
 
 			removeResponse, err = grpcApi.RemoveVideoV1(ctx, removeRequest)
 		})
@@ -254,13 +265,13 @@ var _ = Describe("Api", func() {
 	Context("remove video invalid argument", func() {
 		var (
 			removeResponse *desc.RemoveVideoV1Response
-			err error
+			err            error
 		)
 
 		BeforeEach(func() {
 			r := repo.NewRepo(sqlxDB, 2)
-			grpcApi := api.NewOcpVideoApi(r)
-			removeRequest := &desc.RemoveVideoV1Request{ VideoId: 0 }
+			grpcApi := api.NewOcpVideoApi(r, mockProd)
+			removeRequest := &desc.RemoveVideoV1Request{VideoId: 0}
 
 			removeResponse, err = grpcApi.RemoveVideoV1(ctx, removeRequest)
 		})
@@ -274,13 +285,13 @@ var _ = Describe("Api", func() {
 	Context("remove video sql error", func() {
 		var (
 			removeResponse *desc.RemoveVideoV1Response
-			err error
+			err            error
 		)
 
 		BeforeEach(func() {
 			r := repo.NewRepo(sqlxDB, 2)
-			grpcApi := api.NewOcpVideoApi(r)
-			removeRequest := &desc.RemoveVideoV1Request{ VideoId: 1 }
+			grpcApi := api.NewOcpVideoApi(r, mockProd)
+			removeRequest := &desc.RemoveVideoV1Request{VideoId: 1}
 
 			mock.ExpectExec("DELETE FROM videos").
 				WithArgs(removeRequest.VideoId).
@@ -301,15 +312,15 @@ var _ = Describe("Api", func() {
 			offset uint64 = 0
 
 			listResponse *desc.ListVideosV1Response
-			err error
-			videos = [2]desc.Video{
+			err          error
+			videos       = [2]desc.Video{
 				desc.Video{
-					Id: 1,
+					Id:      1,
 					SlideId: 7,
 					Link:    "/link/to/7",
 				},
 				desc.Video{
-					Id: 2,
+					Id:      2,
 					SlideId: 42,
 					Link:    "/link/to/42",
 				},
@@ -318,7 +329,7 @@ var _ = Describe("Api", func() {
 
 		BeforeEach(func() {
 			r := repo.NewRepo(sqlxDB, 2)
-			grpcApi := api.NewOcpVideoApi(r)
+			grpcApi := api.NewOcpVideoApi(r, mockProd)
 			listRequest := &desc.ListVideosV1Request{Limit: limit, Offset: offset}
 
 			rows := sqlmock.NewRows([]string{"id", "slide_id", "link"}).
@@ -344,12 +355,12 @@ var _ = Describe("Api", func() {
 			offset uint64 = 0
 
 			listResponse *desc.ListVideosV1Response
-			err error
+			err          error
 		)
 
 		BeforeEach(func() {
 			r := repo.NewRepo(sqlxDB, 2)
-			grpcApi := api.NewOcpVideoApi(r)
+			grpcApi := api.NewOcpVideoApi(r, mockProd)
 			listRequest := &desc.ListVideosV1Request{Limit: limit, Offset: offset}
 
 			mock.ExpectQuery(
@@ -367,7 +378,7 @@ var _ = Describe("Api", func() {
 
 	Context("multicreate videos", func() {
 		var (
-			vs = [2]models.Video {
+			vs = [2]models.Video{
 				{
 					VideoId: 1,
 					SlideId: 7,
@@ -379,23 +390,23 @@ var _ = Describe("Api", func() {
 					Link:    "/video/42",
 				},
 			}
-			multiCreateRequest *desc.MultiCreateVideoV1Request
+			multiCreateRequest  *desc.MultiCreateVideoV1Request
 			multiCreateResponse *desc.MultiCreateVideoV1Response
-			err error
+			err                 error
 		)
 
 		BeforeEach(func() {
 			r := repo.NewRepo(sqlxDB, 2)
-			grpcApi := api.NewOcpVideoApi(r)
+			grpcApi := api.NewOcpVideoApi(r, mockProd)
 			multiCreateRequest = &desc.MultiCreateVideoV1Request{
 				Videos: []*desc.NewVideo{
 					{
 						SlideId: vs[0].SlideId,
-						Link: vs[0].Link,
+						Link:    vs[0].Link,
 					},
 					{
 						SlideId: vs[1].SlideId,
-						Link: vs[1].Link,
+						Link:    vs[1].Link,
 					},
 				},
 			}
@@ -403,6 +414,7 @@ var _ = Describe("Api", func() {
 			mock.ExpectExec("INSERT INTO videos").
 				WithArgs(vs[0].SlideId, vs[0].Link, vs[1].SlideId, vs[1].Link).
 				WillReturnResult(sqlmock.NewResult(2, 2))
+			mockProd.EXPECT().SendEvent(gomock.Any()).Return(nil)
 
 			multiCreateResponse, err = grpcApi.MultiCreateVideoV1(ctx, multiCreateRequest)
 		})
@@ -416,17 +428,17 @@ var _ = Describe("Api", func() {
 	Context("multicreate videos invalid argument", func() {
 		var (
 			multiCreateResponse *desc.MultiCreateVideoV1Response
-			err error
+			err                 error
 		)
 
 		BeforeEach(func() {
 			r := repo.NewRepo(sqlxDB, 2)
-			grpcApi := api.NewOcpVideoApi(r)
+			grpcApi := api.NewOcpVideoApi(r, mockProd)
 			multiCreateRequest := &desc.MultiCreateVideoV1Request{
 				Videos: []*desc.NewVideo{
 					{
 						SlideId: 0,
-						Link: "/invalid/slide/id",
+						Link:    "/invalid/slide/id",
 					},
 				},
 			}
@@ -443,17 +455,17 @@ var _ = Describe("Api", func() {
 	Context("multicreate videos sql error", func() {
 		var (
 			multiCreateResponse *desc.MultiCreateVideoV1Response
-			err error
+			err                 error
 		)
 
 		BeforeEach(func() {
 			r := repo.NewRepo(sqlxDB, 2)
-			grpcApi := api.NewOcpVideoApi(r)
+			grpcApi := api.NewOcpVideoApi(r, mockProd)
 			multiCreateRequest := &desc.MultiCreateVideoV1Request{
 				Videos: []*desc.NewVideo{
 					{
 						SlideId: 7,
-						Link: "/link/7",
+						Link:    "/link/7",
 					},
 				},
 			}
@@ -473,7 +485,7 @@ var _ = Describe("Api", func() {
 
 	Context("multicreate videos batched", func() {
 		var (
-			vs = [2]models.Video {
+			vs = [2]models.Video{
 				{
 					VideoId: 1,
 					SlideId: 7,
@@ -485,23 +497,23 @@ var _ = Describe("Api", func() {
 					Link:    "/video/42",
 				},
 			}
-			multiCreateRequest *desc.MultiCreateVideoV1Request
+			multiCreateRequest  *desc.MultiCreateVideoV1Request
 			multiCreateResponse *desc.MultiCreateVideoV1Response
-			err error
+			err                 error
 		)
 
 		BeforeEach(func() {
 			r := repo.NewRepo(sqlxDB, 1)
-			grpcApi := api.NewOcpVideoApi(r)
+			grpcApi := api.NewOcpVideoApi(r, mockProd)
 			multiCreateRequest = &desc.MultiCreateVideoV1Request{
 				Videos: []*desc.NewVideo{
 					{
 						SlideId: vs[0].SlideId,
-						Link: vs[0].Link,
+						Link:    vs[0].Link,
 					},
 					{
 						SlideId: vs[1].SlideId,
-						Link: vs[1].Link,
+						Link:    vs[1].Link,
 					},
 				},
 			}
@@ -513,6 +525,8 @@ var _ = Describe("Api", func() {
 			mock.ExpectExec("INSERT INTO videos").
 				WithArgs(vs[1].SlideId, vs[1].Link).
 				WillReturnResult(sqlmock.NewResult(2, 1))
+
+			mockProd.EXPECT().SendEvent(gomock.Any()).Return(nil)
 
 			multiCreateResponse, err = grpcApi.MultiCreateVideoV1(ctx, multiCreateRequest)
 		})
@@ -526,12 +540,12 @@ var _ = Describe("Api", func() {
 	Context("update video", func() {
 		var (
 			updateResponse *desc.UpdateVideoV1Response
-			err error
+			err            error
 		)
 
 		BeforeEach(func() {
 			r := repo.NewRepo(sqlxDB, 2)
-			grpcApi := api.NewOcpVideoApi(r)
+			grpcApi := api.NewOcpVideoApi(r, mockProd)
 			updateRequest := &desc.UpdateVideoV1Request{
 				Video: &desc.Video{Id: 1, SlideId: 7, Link: "/video/7"},
 			}
@@ -539,6 +553,7 @@ var _ = Describe("Api", func() {
 			mock.ExpectExec("UPDATE videos SET").
 				WithArgs(updateRequest.Video.SlideId, updateRequest.Video.Link, updateRequest.Video.Id).
 				WillReturnResult(sqlmock.NewResult(0, 1))
+			mockProd.EXPECT().SendEvent(gomock.Any()).Return(nil)
 
 			updateResponse, err = grpcApi.UpdateVideoV1(ctx, updateRequest)
 		})
@@ -552,12 +567,12 @@ var _ = Describe("Api", func() {
 	Context("update video invalid argument", func() {
 		var (
 			updateResponse *desc.UpdateVideoV1Response
-			err error
+			err            error
 		)
 
 		BeforeEach(func() {
 			r := repo.NewRepo(sqlxDB, 2)
-			grpcApi := api.NewOcpVideoApi(r)
+			grpcApi := api.NewOcpVideoApi(r, mockProd)
 			updateRequest := &desc.UpdateVideoV1Request{
 				Video: &desc.Video{Id: 0, SlideId: 0, Link: "/invalid/id"},
 			}
@@ -574,12 +589,12 @@ var _ = Describe("Api", func() {
 	Context("update video sql error", func() {
 		var (
 			updateResponse *desc.UpdateVideoV1Response
-			err error
+			err            error
 		)
 
 		BeforeEach(func() {
 			r := repo.NewRepo(sqlxDB, 2)
-			grpcApi := api.NewOcpVideoApi(r)
+			grpcApi := api.NewOcpVideoApi(r, mockProd)
 			updateRequest := &desc.UpdateVideoV1Request{
 				Video: &desc.Video{Id: 0, SlideId: 0, Link: "/invalid/id"},
 			}

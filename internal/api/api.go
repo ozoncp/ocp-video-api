@@ -9,13 +9,16 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"ocp-video-api/internal/models"
+	"ocp-video-api/internal/producer"
 	"ocp-video-api/internal/repo"
 	desc "ocp-video-api/pkg/ocp-video-api"
+	"time"
 )
 
 type api struct {
 	desc.UnimplementedOcpVideoApiServer
 	repo repo.Repo
+	prod producer.Producer
 }
 
 func init() {
@@ -98,6 +101,18 @@ func (a *api) CreateVideoV1(
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
+	event := producer.Event{
+		Type: producer.EventTypCreated,
+		Data: map[string]interface{}{
+			"Id":        ID,
+			"Timestamp": time.Now(),
+		},
+	}
+	err = a.prod.SendEvent(event)
+	if err != nil {
+		panic("logic error: producer closed before api triggers create video")
+	}
+
 	return &desc.CreateVideoV1Response{VideoId: ID}, nil
 }
 
@@ -126,6 +141,18 @@ func (a *api) MultiCreateVideoV1(
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
+	event := producer.Event{
+		Type: producer.EventTypMultiCreated,
+		Data: map[string]interface{}{
+			"Count":        cnt,
+			"Timestamp": time.Now(),
+		},
+	}
+	err = a.prod.SendEvent(event)
+	if err != nil {
+		panic("logic error: producer closed before api triggers multicreate video")
+	}
+
 	return &desc.MultiCreateVideoV1Response{Count: cnt}, nil
 }
 
@@ -144,6 +171,18 @@ func (a *api) RemoveVideoV1(
 	if err != nil {
 		log.Print("RemoveVideoV1 video is not removed due to error", req, err)
 		return nil, status.Error(codes.NotFound, err.Error())
+	}
+
+	event := producer.Event{
+		Type: producer.EventTypRemoved,
+		Data: map[string]interface{}{
+			"Id":        req.VideoId,
+			"Timestamp": time.Now(),
+		},
+	}
+	err = a.prod.SendEvent(event)
+	if err != nil {
+		panic("logic error: producer closed before api triggers remove video")
 	}
 
 	log.Print("RemoveVideoV1 video removed")
@@ -173,11 +212,23 @@ func (a *api) UpdateVideoV1(
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
+	event := producer.Event{
+		Type: producer.EventTypUpdated,
+		Data: map[string]interface{}{
+			"Id":        req.Video.Id,
+			"Timestamp": time.Now(),
+		},
+	}
+	err = a.prod.SendEvent(event)
+	if err != nil {
+		panic("logic error: producer closed before api triggers update video")
+	}
+
 	return &desc.UpdateVideoV1Response{
 		Found: true,
 	}, nil
 }
 
-func NewOcpVideoApi(r repo.Repo) desc.OcpVideoApiServer {
-	return &api{repo: r}
+func NewOcpVideoApi(r repo.Repo, p producer.Producer) desc.OcpVideoApiServer {
+	return &api{repo: r, prod: p}
 }
