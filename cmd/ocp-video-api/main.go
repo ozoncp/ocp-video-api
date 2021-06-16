@@ -66,7 +66,7 @@ func runGrpc() {
 	}
 
 	s := grpc.NewServer()
-	p, err := producer.NewProducer(16, producer.NewSaramaSender("ocp", "video"))
+	p, err := producer.NewProducer(16, producer.NewSaramaSender("localhost:9094", "video"))
 	if err != nil {
 		panic(fmt.Sprintf("can't create producer, error: %v", err))
 	}
