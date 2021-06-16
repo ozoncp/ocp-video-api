@@ -8,6 +8,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"ocp-video-api/internal/metrics"
 	"ocp-video-api/internal/models"
 	"ocp-video-api/internal/producer"
 	"ocp-video-api/internal/repo"
@@ -113,6 +114,8 @@ func (a *api) CreateVideoV1(
 		panic("logic error: producer closed before api triggers create video")
 	}
 
+	metrics.IncrementSuccessfulCreates(1)
+
 	return &desc.CreateVideoV1Response{VideoId: ID}, nil
 }
 
@@ -153,6 +156,8 @@ func (a *api) MultiCreateVideoV1(
 		panic("logic error: producer closed before api triggers multicreate video")
 	}
 
+	metrics.IncrementSuccessfulCreates(cnt)
+
 	return &desc.MultiCreateVideoV1Response{Count: cnt}, nil
 }
 
@@ -184,6 +189,8 @@ func (a *api) RemoveVideoV1(
 	if err != nil {
 		panic("logic error: producer closed before api triggers remove video")
 	}
+
+	metrics.IncrementSuccessfulRemoves(1)
 
 	log.Print("RemoveVideoV1 video removed")
 	return &desc.RemoveVideoV1Response{
@@ -223,6 +230,8 @@ func (a *api) UpdateVideoV1(
 	if err != nil {
 		panic("logic error: producer closed before api triggers update video")
 	}
+
+	metrics.IncrementSuccessfulUpdates(1)
 
 	return &desc.UpdateVideoV1Response{
 		Found: true,

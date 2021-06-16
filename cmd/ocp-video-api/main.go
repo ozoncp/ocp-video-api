@@ -4,10 +4,12 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"log"
 	"net"
 	"net/http"
 	"ocp-video-api/internal/api"
+	"ocp-video-api/internal/metrics"
 	"ocp-video-api/internal/producer"
 	"ocp-video-api/internal/repo"
 	desc "ocp-video-api/pkg/ocp-video-api"
@@ -84,6 +86,15 @@ func runGrpc() {
 
 func main() {
 	flag.Parse()
+
+	metrics.Register()
+	http.Handle("/metrics", promhttp.Handler())
+	go func() {
+		err := http.ListenAndServe("0.0.0.0:9091", nil)
+		if err != nil {
+			panic(err)
+		}
+	}()
 
 	go runGrpc()
 
