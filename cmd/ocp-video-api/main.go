@@ -59,7 +59,7 @@ func runGrpc() {
 	}
 
 	db, err := sqlx.Connect("postgres",
-		"postgres://goland:goland@db:5432/goland?sslmode=disable")
+		"postgres://goland:goland@localhost:5432/goland?sslmode=disable")
 	if err != nil {
 		fmt.Println(err)
 		return
