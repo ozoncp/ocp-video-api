@@ -50,7 +50,7 @@ func (r *repo) AddVideos(ctx context.Context, vs []models.Video) ([]uint64, erro
 }
 
 func (r *repo) insertBatch(ctx context.Context, batch []models.Video, dstIDs *[]uint64) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, fmt.Sprintf("Create batch with %v videos", len(batch)))
+	span, _ := opentracing.StartSpanFromContext(ctx, fmt.Sprintf("Create batch with %v videos", len(batch)))
 	defer span.Finish()
 
 	query := squirrel.Insert(tableName).
