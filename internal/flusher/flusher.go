@@ -33,16 +33,16 @@ func (f *flusher) Flush(vs []models.Video) ([]models.Video, error) {
 			s = len(vs)
 		}
 		var (
-			handledCnt uint64
+			ids []uint64
 			err error
 		)
-		if handledCnt, err = f.repo.AddVideos(context.Background(), vs[0:s:s]); err != nil {
-			return vs[handledCnt:], err
+		if ids, err = f.repo.AddVideos(context.Background(), vs[0:s:s]); err != nil {
+			return vs[len(ids):], err
 		}
-		if handledCnt != uint64(s) {
+		if len(ids) != s {
 			panic("logic error: handledCnt != batch && err = nil")
 		}
-		vs = vs[handledCnt:]
+		vs = vs[len(ids):]
 	}
 
 	return nil, nil
