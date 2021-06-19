@@ -14,7 +14,7 @@ import (
 const tableName = "videos"
 
 type Repo interface {
-	AddVideos(ctx context.Context, v []models.Video) (uint64, error)
+	AddVideos(ctx context.Context, v []models.Video) ([]uint64, error)
 	AddVideo(ctx context.Context, v models.Video) (uint64, error)
 	RemoveVideo(ctx context.Context, ID uint64) error
 	GetVideo(ctx context.Context, ID uint64) (*models.Video, error)
@@ -31,31 +31,31 @@ type repo struct {
 	db        *sqlx.DB
 }
 
-func (r *repo) AddVideos(ctx context.Context, vs []models.Video) (uint64, error) {
+func (r *repo) AddVideos(ctx context.Context, vs []models.Video) ([]uint64, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, fmt.Sprintf("Adding %v videos", len(vs)))
 	defer span.Finish()
 
 	log.Print("Adding videos", vs)
 	batches := utils.SliceChunkedModelsVideo(vs, r.chunkSize)
 
-	var pushedCnt uint64
+	ids := make([]uint64, 0, len(vs))
 	for _, batch := range batches {
-		added, err := r.createBatch(ctx, batch)
+		err := r.insertBatch(ctx, batch, &ids)
 		if err != nil {
-			return pushedCnt, err
+			return ids, err
 		}
-		pushedCnt += added
 	}
-	log.Print("Videos succesfully pushed", pushedCnt)
-	return pushedCnt, nil
+	log.Print("Videos succesfully pushed, ids:", ids)
+	return ids, nil
 }
 
-func (r *repo) createBatch(ctx context.Context, batch []models.Video) (uint64, error) {
+func (r *repo) insertBatch(ctx context.Context, batch []models.Video, dstIDs *[]uint64) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, fmt.Sprintf("Create batch with %v videos", len(batch)))
 	defer span.Finish()
 
 	query := squirrel.Insert(tableName).
 		Columns("slide_id", "link").
+		Suffix("RETURNING \"id\"").
 		RunWith(r.db).
 		PlaceholderFormat(squirrel.Dollar)
 
@@ -63,19 +63,29 @@ func (r *repo) createBatch(ctx context.Context, batch []models.Video) (uint64, e
 		query = query.Values(v.SlideId, v.Link)
 	}
 
-	rc, err := query.ExecContext(ctx)
+	rows, err := query.Query()
 	if err != nil {
 		log.Print("Error pushing batch", batch, "error", err)
-		return 0, err
+		return err
+	}
+	defer func() {
+		err = rows.Close()
+		if err != nil {
+			log.Print("Error closing rows in batch insert", err)
+		}
+	}()
+
+	for rows.Next() {
+		var id uint64
+		errScan := rows.Scan(&id)
+		if errScan != nil {
+			log.Print(errScan)
+			return errScan
+		}
+		*dstIDs = append(*dstIDs, id)
 	}
 
-	added, err := rc.RowsAffected()
-	if err != nil {
-		log.Print("Error rows affected", batch, "error", err)
-		return 0, err
-	}
-
-	return uint64(added), nil
+	return nil
 }
 
 func (r *repo) AddVideo(ctx context.Context, v models.Video) (uint64, error) {

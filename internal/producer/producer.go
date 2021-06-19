@@ -14,7 +14,6 @@ type EventTyp = uint64
 const (
 	EventTypDefault EventTyp = iota
 	EventTypCreated
-	EventTypMultiCreated
 	EventTypUpdated
 	EventTypRemoved
 )

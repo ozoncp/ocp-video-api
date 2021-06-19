@@ -138,22 +138,24 @@ func (a *api) MultiCreateVideoV1(
 		vs[i].Link = v.Link
 	}
 
-	cnt, err := a.repo.AddVideos(ctx, vs)
+	ids, err := a.repo.AddVideos(ctx, vs)
+	cnt := uint64(len(ids))
 	if err != nil {
 		log.Print("MultiCreateVideoV1 video is not created due to error", req, err, "created", cnt)
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	event := producer.Event{
-		Type: producer.EventTypMultiCreated,
-		Data: map[string]interface{}{
-			"Count":        cnt,
-			"Timestamp": time.Now(),
-		},
-	}
-	err = a.prod.SendEvent(event)
-	if err != nil {
-		panic("logic error: producer closed before api triggers multicreate video")
+	for _, ID := range ids {
+		err = a.prod.SendEvent(producer.Event{
+			Type: producer.EventTypCreated,
+			Data: map[string]interface{}{
+				"Id":        ID,
+				"Timestamp": time.Now(),
+			},
+		})
+		if err != nil {
+			panic("logic error: producer closed before api triggers multicreate video")
+		}
 	}
 
 	metrics.IncrementSuccessfulCreates(cnt)
