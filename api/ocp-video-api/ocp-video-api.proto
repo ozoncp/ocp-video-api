@@ -29,6 +29,7 @@ service OcpVideoApi {
     rpc CreateVideoV1(CreateVideoV1Request) returns (CreateVideoV1Response) {
         option (google.api.http) = {
             post: "/v1/videos"
+            body: "*"
         };
     }
 
@@ -36,6 +37,7 @@ service OcpVideoApi {
     rpc MultiCreateVideoV1(MultiCreateVideoV1Request) returns (MultiCreateVideoV1Response) {
         option (google.api.http) = {
           post: "/v1/videos/multi"
+          body: "*"
         };
     }
 
@@ -50,6 +52,7 @@ service OcpVideoApi {
   rpc UpdateVideoV1(UpdateVideoV1Request) returns (UpdateVideoV1Response) {
     option (google.api.http) = {
       post: "/v1/videos/update/{video.id}"
+      body: "*"
     };
   }
 }
