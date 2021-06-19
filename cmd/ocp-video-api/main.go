@@ -67,6 +67,7 @@ func runGrpc() {
 	}
 
 	s := grpc.NewServer()
+	r := repo.NewRepo(db, chunkSize)
 	p, err := producer.NewProducer(16, producer.NewSaramaSender("localhost:9094", "video"))
 	if err != nil {
 		log.Fatalf("can't create producer, error: %v", err)
@@ -77,7 +78,7 @@ func runGrpc() {
 	}
 	m := metrics.New()
 	m.Init()
-	desc.RegisterOcpVideoApiServer(s, api.NewOcpVideoApi(repo.NewRepo(db, chunkSize), p, m))
+	desc.RegisterOcpVideoApiServer(s, api.NewOcpVideoApi(r, p, m))
 
 	fmt.Printf("Server listening on %s\n", *grpcEndpoint)
 	if err := s.Serve(listen); err != nil {
