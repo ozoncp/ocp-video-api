@@ -4,6 +4,7 @@ go 1.16
 
 require (
 	github.com/DATA-DOG/go-sqlmock v1.5.0
+	github.com/HdrHistogram/hdrhistogram-go v1.1.0 // indirect
 	github.com/Masterminds/squirrel v1.5.0
 	github.com/Shopify/sarama v1.29.0
 	github.com/cheekybits/genny v1.0.0
@@ -20,6 +21,9 @@ require (
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/prometheus/client_golang v1.11.0
 	github.com/rs/zerolog v1.22.0
+	github.com/uber/jaeger-client-go v2.29.1+incompatible
+	github.com/uber/jaeger-lib v2.4.1+incompatible
+	go.uber.org/atomic v1.8.0 // indirect
 	google.golang.org/genproto v0.0.0-20210607140030-00d4fb20b1ae
 	google.golang.org/grpc v1.38.0
 	google.golang.org/protobuf v1.26.0

@@ -4,6 +4,10 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/jmoiron/sqlx"
+	_ "github.com/lib/pq"
+	"google.golang.org/grpc"
 	"log"
 	"net"
 	"net/http"
@@ -11,13 +15,8 @@ import (
 	"ocp-video-api/internal/metrics"
 	"ocp-video-api/internal/producer"
 	"ocp-video-api/internal/repo"
+	"ocp-video-api/internal/utils"
 	desc "ocp-video-api/pkg/ocp-video-api"
-
-	"github.com/jmoiron/sqlx"
-	_ "github.com/lib/pq"
-
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"google.golang.org/grpc"
 )
 
 const (
@@ -89,9 +88,14 @@ func runGrpc() {
 func main() {
 	flag.Parse()
 
+	err := utils.InitTracing()
+	if err != nil {
+		log.Fatalf("can't init tracing: %v", err)
+	}
+
 	go runGrpc()
 
-	if err := runHttp(); err != nil {
-		log.Fatal(err)
+	if err = runHttp(); err != nil {
+		log.Fatalf("can't init http server: %v", err)
 	}
 }
