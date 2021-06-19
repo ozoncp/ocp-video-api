@@ -4,7 +4,6 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"log"
 	"net"
 	"net/http"
@@ -76,7 +75,9 @@ func runGrpc() {
 	if err != nil {
 		log.Fatalf("can't init producer, error: %v", err)
 	}
-	desc.RegisterOcpVideoApiServer(s, api.NewOcpVideoApi(repo.NewRepo(db, chunkSize), p))
+	m := metrics.New()
+	m.Init()
+	desc.RegisterOcpVideoApiServer(s, api.NewOcpVideoApi(repo.NewRepo(db, chunkSize), p, m))
 
 	fmt.Printf("Server listening on %s\n", *grpcEndpoint)
 	if err := s.Serve(listen); err != nil {
@@ -86,15 +87,6 @@ func runGrpc() {
 
 func main() {
 	flag.Parse()
-
-	metrics.Register()
-	http.Handle("/metrics", promhttp.Handler())
-	go func() {
-		err := http.ListenAndServe("0.0.0.0:9091", nil)
-		if err != nil {
-			panic(err)
-		}
-	}()
 
 	go runGrpc()
 

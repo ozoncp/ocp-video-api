@@ -20,6 +20,7 @@ type api struct {
 	desc.UnimplementedOcpVideoApiServer
 	repo repo.Repo
 	prod producer.Producer
+	metrics metrics.Metrics
 }
 
 func init() {
@@ -114,7 +115,7 @@ func (a *api) CreateVideoV1(
 		panic("logic error: producer closed before api triggers create video")
 	}
 
-	metrics.IncrementSuccessfulCreates(1)
+	a.metrics.IncrementSuccessfulCreates(uint64(1))
 
 	return &desc.CreateVideoV1Response{VideoId: ID}, nil
 }
@@ -158,7 +159,7 @@ func (a *api) MultiCreateVideoV1(
 		}
 	}
 
-	metrics.IncrementSuccessfulCreates(cnt)
+	a.metrics.IncrementSuccessfulCreates(cnt)
 
 	return &desc.MultiCreateVideoV1Response{Count: cnt}, nil
 }
@@ -192,7 +193,7 @@ func (a *api) RemoveVideoV1(
 		panic("logic error: producer closed before api triggers remove video")
 	}
 
-	metrics.IncrementSuccessfulRemoves(1)
+	a.metrics.IncrementSuccessfulRemoves(1)
 
 	log.Print("RemoveVideoV1 video removed")
 	return &desc.RemoveVideoV1Response{
@@ -233,13 +234,13 @@ func (a *api) UpdateVideoV1(
 		panic("logic error: producer closed before api triggers update video")
 	}
 
-	metrics.IncrementSuccessfulUpdates(1)
+	a.metrics.IncrementSuccessfulUpdates(1)
 
 	return &desc.UpdateVideoV1Response{
 		Found: true,
 	}, nil
 }
 
-func NewOcpVideoApi(r repo.Repo, p producer.Producer) desc.OcpVideoApiServer {
-	return &api{repo: r, prod: p}
+func NewOcpVideoApi(r repo.Repo, p producer.Producer, m metrics.Metrics) desc.OcpVideoApiServer {
+	return &api{repo: r, prod: p, metrics: m}
 }

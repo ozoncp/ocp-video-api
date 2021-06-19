@@ -1,6 +1,10 @@
 package metrics
 
-import "github.com/prometheus/client_golang/prometheus"
+import (
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"net/http"
+)
 
 const (
 	label    = "action"
@@ -34,6 +38,14 @@ func (m *metrics) Init() {
 	)
 
 	prometheus.MustRegister(m.counters)
+
+	http.Handle("/metrics", promhttp.Handler())
+	go func() {
+		err := http.ListenAndServe("0.0.0.0:9091", nil)
+		if err != nil {
+			panic(err)
+		}
+	}()
 }
 
 func (m *metrics) increment(action string, times uint64) {
