@@ -31,9 +31,9 @@ type Producer interface {
 
 type producer struct {
 	closing int32
-	events chan Event
-		// в saver идея отменять через контекст похоже не идиоматична для Go,
-		// здесь отмена через запись в канал в Close
+	events  chan Event
+	// в saver идея отменять через контекст похоже не идиоматична для Go,
+	// здесь отмена через запись в канал в Close
 	close  chan struct{}
 	done   chan struct{}
 	sender Sender
@@ -42,10 +42,10 @@ type producer struct {
 func NewProducer(capacity uint, sender Sender) (Producer, error) {
 	return &producer{
 		closing: 0,
-		events: make(chan Event, capacity),
-		close:  make(chan struct{}),
-		done:   make(chan struct{}),
-		sender: sender,
+		events:  make(chan Event, capacity),
+		close:   make(chan struct{}),
+		done:    make(chan struct{}),
+		sender:  sender,
 	}, nil
 }
 
@@ -104,9 +104,9 @@ func (p *producer) sendLoop() {
 				}
 			}
 
-				// записи в этот канал быть не должно, т.к. SendEvent возвращает error
-				// если будет паника из-за записи в закрытый канал, то это логическая ошибка
-				// и это лучше если это событие просто потеряется
+			// записи в этот канал быть не должно, т.к. SendEvent возвращает error
+			// если будет паника из-за записи в закрытый канал, то это логическая ошибка
+			// и это лучше если это событие просто потеряется
 			close(p.events)
 
 			err := p.sender.Close()

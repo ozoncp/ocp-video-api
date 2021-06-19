@@ -39,12 +39,12 @@ var _ = Describe("Producer", func() {
 		BeforeEach(func() {
 			e := producer.Event{
 				Type: producer.EventTypCreated,
-				Data: map[string]interface{}{"data": "created" },
+				Data: map[string]interface{}{"data": "created"},
 			}
 
 			mockSender.EXPECT().Send(producer.Event{
 				Type: producer.EventTypCreated,
-				Data: map[string]interface{}{"data": "created" },
+				Data: map[string]interface{}{"data": "created"},
 			}).Return(nil)
 			mockSender.EXPECT().Close().Return(nil)
 
@@ -60,7 +60,7 @@ var _ = Describe("Producer", func() {
 		BeforeEach(func() {
 			e := producer.Event{
 				Type: producer.EventTypCreated,
-				Data: map[string]interface{}{"data": "created" },
+				Data: map[string]interface{}{"data": "created"},
 			}
 
 			mockSender.EXPECT().Close().Return(nil)
@@ -78,12 +78,12 @@ var _ = Describe("Producer", func() {
 		BeforeEach(func() {
 			e := producer.Event{
 				Type: producer.EventTypCreated,
-				Data: map[string]interface{}{"data": "created" },
+				Data: map[string]interface{}{"data": "created"},
 			}
 
 			mockSender.EXPECT().Send(producer.Event{
 				Type: producer.EventTypCreated,
-				Data: map[string]interface{}{"data": "created" },
+				Data: map[string]interface{}{"data": "created"},
 			}).Return(nil)
 			mockSender.EXPECT().Close().Return(nil).Times(1)
 

@@ -7,10 +7,10 @@ import (
 )
 
 const (
-	label    = "action"
-	create   = "create"
-	update   = "update"
-	remove   = "remove"
+	label  = "action"
+	create = "create"
+	update = "update"
+	remove = "remove"
 )
 
 type Metrics interface {
@@ -24,7 +24,7 @@ func New() Metrics {
 	return &metrics{}
 }
 
-type metrics struct{
+type metrics struct {
 	counters *prometheus.CounterVec
 }
 
@@ -51,7 +51,6 @@ func (m *metrics) Init() {
 func (m *metrics) increment(action string, times uint64) {
 	m.counters.With(prometheus.Labels{label: action}).Add(float64(times))
 }
-
 
 func (m *metrics) IncrementSuccessfulCreates(times uint64) {
 	m.increment(create, times)

@@ -18,8 +18,8 @@ import (
 
 type api struct {
 	desc.UnimplementedOcpVideoApiServer
-	repo repo.Repo
-	prod producer.Producer
+	repo    repo.Repo
+	prod    producer.Producer
 	metrics metrics.Metrics
 }
 

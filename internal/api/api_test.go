@@ -27,8 +27,8 @@ var _ = Describe("Api", func() {
 		sqlxDB *sqlx.DB
 		mock   sqlmock.Sqlmock
 
-		ctrl     *gomock.Controller
-		mockProd *mockpkg.MockProducer
+		ctrl        *gomock.Controller
+		mockProd    *mockpkg.MockProducer
 		mockMetrics *mockpkg.MockMetrics
 
 		err error

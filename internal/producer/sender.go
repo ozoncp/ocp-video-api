@@ -14,13 +14,13 @@ type Sender interface {
 func NewSaramaSender(broker string, topic string) Sender {
 	return &sender{
 		broker: broker,
-		topic: topic,
+		topic:  topic,
 	}
 }
 
 type sender struct {
 	broker string
-	topic string
+	topic  string
 	prod   sarama.SyncProducer
 }
 
