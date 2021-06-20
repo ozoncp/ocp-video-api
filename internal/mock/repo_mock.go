@@ -36,7 +36,7 @@ func (m *MockRepo) EXPECT() *MockRepoMockRecorder {
 }
 
 // AddVideo mocks base method.
-func (m *MockRepo) AddVideo(arg0 context.Context, arg1 *models.Video) (uint64, error) {
+func (m *MockRepo) AddVideo(arg0 context.Context, arg1 models.Video) (uint64, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AddVideo", arg0, arg1)
 	ret0, _ := ret[0].(uint64)
@@ -51,10 +51,10 @@ func (mr *MockRepoMockRecorder) AddVideo(arg0, arg1 interface{}) *gomock.Call {
 }
 
 // AddVideos mocks base method.
-func (m *MockRepo) AddVideos(arg0 context.Context, arg1 []models.Video) (uint64, error) {
+func (m *MockRepo) AddVideos(arg0 context.Context, arg1 []models.Video) ([]uint64, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AddVideos", arg0, arg1)
-	ret0, _ := ret[0].(uint64)
+	ret0, _ := ret[0].([]uint64)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -107,4 +107,18 @@ func (m *MockRepo) RemoveVideo(arg0 context.Context, arg1 uint64) error {
 func (mr *MockRepoMockRecorder) RemoveVideo(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveVideo", reflect.TypeOf((*MockRepo)(nil).RemoveVideo), arg0, arg1)
+}
+
+// UpdateVideo mocks base method.
+func (m *MockRepo) UpdateVideo(arg0 context.Context, arg1 models.Video) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateVideo", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateVideo indicates an expected call of UpdateVideo.
+func (mr *MockRepoMockRecorder) UpdateVideo(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateVideo", reflect.TypeOf((*MockRepo)(nil).UpdateVideo), arg0, arg1)
 }

@@ -331,6 +331,157 @@ var _ interface {
 	ErrorName() string
 } = CreateVideoV1ResponseValidationError{}
 
+// Validate checks the field values on MultiCreateVideoV1Request with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *MultiCreateVideoV1Request) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	for idx, item := range m.GetVideos() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return MultiCreateVideoV1RequestValidationError{
+					field:  fmt.Sprintf("Videos[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	return nil
+}
+
+// MultiCreateVideoV1RequestValidationError is the validation error returned by
+// MultiCreateVideoV1Request.Validate if the designated constraints aren't met.
+type MultiCreateVideoV1RequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e MultiCreateVideoV1RequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e MultiCreateVideoV1RequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e MultiCreateVideoV1RequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e MultiCreateVideoV1RequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e MultiCreateVideoV1RequestValidationError) ErrorName() string {
+	return "MultiCreateVideoV1RequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e MultiCreateVideoV1RequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sMultiCreateVideoV1Request.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = MultiCreateVideoV1RequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = MultiCreateVideoV1RequestValidationError{}
+
+// Validate checks the field values on MultiCreateVideoV1Response with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *MultiCreateVideoV1Response) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Count
+
+	return nil
+}
+
+// MultiCreateVideoV1ResponseValidationError is the validation error returned
+// by MultiCreateVideoV1Response.Validate if the designated constraints aren't met.
+type MultiCreateVideoV1ResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e MultiCreateVideoV1ResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e MultiCreateVideoV1ResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e MultiCreateVideoV1ResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e MultiCreateVideoV1ResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e MultiCreateVideoV1ResponseValidationError) ErrorName() string {
+	return "MultiCreateVideoV1ResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e MultiCreateVideoV1ResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sMultiCreateVideoV1Response.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = MultiCreateVideoV1ResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = MultiCreateVideoV1ResponseValidationError{}
+
 // Validate checks the field values on RemoveVideoV1Request with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, an error is returned.
@@ -625,6 +776,152 @@ var _ interface {
 	ErrorName() string
 } = DescribeVideoV1ResponseValidationError{}
 
+// Validate checks the field values on UpdateVideoV1Request with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *UpdateVideoV1Request) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if v, ok := interface{}(m.GetVideo()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UpdateVideoV1RequestValidationError{
+				field:  "Video",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	return nil
+}
+
+// UpdateVideoV1RequestValidationError is the validation error returned by
+// UpdateVideoV1Request.Validate if the designated constraints aren't met.
+type UpdateVideoV1RequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UpdateVideoV1RequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UpdateVideoV1RequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UpdateVideoV1RequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UpdateVideoV1RequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UpdateVideoV1RequestValidationError) ErrorName() string {
+	return "UpdateVideoV1RequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UpdateVideoV1RequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUpdateVideoV1Request.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UpdateVideoV1RequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UpdateVideoV1RequestValidationError{}
+
+// Validate checks the field values on UpdateVideoV1Response with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *UpdateVideoV1Response) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Found
+
+	return nil
+}
+
+// UpdateVideoV1ResponseValidationError is the validation error returned by
+// UpdateVideoV1Response.Validate if the designated constraints aren't met.
+type UpdateVideoV1ResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UpdateVideoV1ResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UpdateVideoV1ResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UpdateVideoV1ResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UpdateVideoV1ResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UpdateVideoV1ResponseValidationError) ErrorName() string {
+	return "UpdateVideoV1ResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UpdateVideoV1ResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUpdateVideoV1Response.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UpdateVideoV1ResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UpdateVideoV1ResponseValidationError{}
+
 // Validate checks the field values on Video with the rules defined in the
 // proto definition for this message. If any rules are violated, an error is returned.
 func (m *Video) Validate() error {
@@ -694,3 +991,76 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = VideoValidationError{}
+
+// Validate checks the field values on NewVideo with the rules defined in the
+// proto definition for this message. If any rules are violated, an error is returned.
+func (m *NewVideo) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if m.GetSlideId() <= 0 {
+		return NewVideoValidationError{
+			field:  "SlideId",
+			reason: "value must be greater than 0",
+		}
+	}
+
+	// no validation rules for Link
+
+	return nil
+}
+
+// NewVideoValidationError is the validation error returned by
+// NewVideo.Validate if the designated constraints aren't met.
+type NewVideoValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e NewVideoValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e NewVideoValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e NewVideoValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e NewVideoValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e NewVideoValidationError) ErrorName() string { return "NewVideoValidationError" }
+
+// Error satisfies the builtin error interface
+func (e NewVideoValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sNewVideo.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = NewVideoValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = NewVideoValidationError{}

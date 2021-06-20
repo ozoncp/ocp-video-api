@@ -29,6 +29,15 @@ service OcpVideoApi {
     rpc CreateVideoV1(CreateVideoV1Request) returns (CreateVideoV1Response) {
         option (google.api.http) = {
             post: "/v1/videos"
+            body: "*"
+        };
+    }
+
+    // Создаёт новые видео (с батчингом)
+    rpc MultiCreateVideoV1(MultiCreateVideoV1Request) returns (MultiCreateVideoV1Response) {
+        option (google.api.http) = {
+          post: "/v1/videos/multi"
+          body: "*"
         };
     }
 
@@ -38,6 +47,14 @@ service OcpVideoApi {
             delete: "/v1/videos/{video_id}"
         };
     }
+
+  // Обновляет видео по идентификатору
+  rpc UpdateVideoV1(UpdateVideoV1Request) returns (UpdateVideoV1Response) {
+    option (google.api.http) = {
+      post: "/v1/videos/update/{video.id}"
+      body: "*"
+    };
+  }
 }
 
 message ListVideosV1Request {
@@ -58,6 +75,14 @@ message CreateVideoV1Response {
     uint64 video_id = 1;
 }
 
+message MultiCreateVideoV1Request {
+  repeated NewVideo videos = 1;
+}
+
+message MultiCreateVideoV1Response {
+  uint64 count = 1;
+}
+
 message RemoveVideoV1Request {
     uint64 video_id = 1 [(validate.rules).uint64.gt = 0];
 }
@@ -74,9 +99,23 @@ message DescribeVideoV1Response {
     Video video = 1;
 }
 
+message UpdateVideoV1Request {
+  Video video = 1;
+}
+
+message UpdateVideoV1Response {
+  bool found = 1;
+}
+
 // Описание видео
 message Video {
     uint64 id = 1;
     uint64 slide_id = 2;
     string link = 3;
+}
+
+// Описание экземпляра запроса создание видео в батче MultiCreate
+message NewVideo {
+  uint64 slide_id = 1 [(validate.rules).uint64.gt = 0];
+  string link = 2;
 }

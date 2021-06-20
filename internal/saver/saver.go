@@ -57,7 +57,7 @@ func (s *saver) Save(ctx context.Context, v models.Video) error {
 	}
 
 	if len(s.videos) == cap(s.videos) {
-			// в случае если буфер канала полон - дропаем наиболее старую запись
+		// в случае если буфер канала полон - дропаем наиболее старую запись
 		<-s.videos
 	}
 	s.videos <- v

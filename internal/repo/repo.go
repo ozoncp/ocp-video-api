@@ -2,8 +2,10 @@ package repo
 
 import (
 	"context"
+	"fmt"
 	"github.com/Masterminds/squirrel"
 	"github.com/jmoiron/sqlx"
+	"github.com/opentracing/opentracing-go"
 	"github.com/rs/zerolog/log"
 	"ocp-video-api/internal/models"
 	"ocp-video-api/internal/utils"
@@ -12,11 +14,12 @@ import (
 const tableName = "videos"
 
 type Repo interface {
-	AddVideos(ctx context.Context, v []models.Video) (uint64, error)
-	AddVideo(ctx context.Context, v *models.Video) (uint64, error)
+	AddVideos(ctx context.Context, v []models.Video) ([]uint64, error)
+	AddVideo(ctx context.Context, v models.Video) (uint64, error)
 	RemoveVideo(ctx context.Context, ID uint64) error
 	GetVideo(ctx context.Context, ID uint64) (*models.Video, error)
 	GetVideos(ctx context.Context, limit, offset uint64) ([]models.Video, error)
+	UpdateVideo(ctx context.Context, v models.Video) error
 }
 
 func NewRepo(db *sqlx.DB, chunkSize int) Repo {
@@ -28,40 +31,65 @@ type repo struct {
 	db        *sqlx.DB
 }
 
-func (r *repo) AddVideos(ctx context.Context, vs []models.Video) (uint64, error) {
+func (r *repo) AddVideos(ctx context.Context, vs []models.Video) ([]uint64, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, fmt.Sprintf("Adding %v videos", len(vs)))
+	defer span.Finish()
+
 	log.Print("Adding videos", vs)
 	batches := utils.SliceChunkedModelsVideo(vs, r.chunkSize)
 
-	var pushedCnt uint64
+	ids := make([]uint64, 0, len(vs))
 	for _, batch := range batches {
-		query := squirrel.Insert(tableName).
-			Columns("slide_id", "link").
-			RunWith(r.db).
-			PlaceholderFormat(squirrel.Dollar)
-
-		for _, v := range batch {
-			query = query.Values(v.SlideId, v.Link)
-		}
-
-		rc, err := query.ExecContext(ctx)
+		err := r.insertBatch(ctx, batch, &ids)
 		if err != nil {
-			log.Print("Error pushing batch", batch, "already pushed", pushedCnt, "error", err)
-			return pushedCnt, err
+			return ids, err
 		}
-
-		added, err := rc.RowsAffected()
-		if err != nil {
-			log.Print("Error rows affected", batch, "already pushed", pushedCnt, "error", err)
-			return pushedCnt, err
-		}
-		pushedCnt += uint64(added)
 	}
-	log.Print("Videos succesfully pushed", pushedCnt)
-	return pushedCnt, nil
+	log.Print("Videos succesfully pushed, ids:", ids)
+	return ids, nil
 }
 
-func (r *repo) AddVideo(ctx context.Context, v *models.Video) (uint64, error) {
-	log.Print("Adding single video", *v)
+func (r *repo) insertBatch(ctx context.Context, batch []models.Video, dstIDs *[]uint64) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, fmt.Sprintf("Create batch with %v videos", len(batch)))
+	defer span.Finish()
+
+	query := squirrel.Insert(tableName).
+		Columns("slide_id", "link").
+		Suffix("RETURNING \"id\"").
+		RunWith(r.db).
+		PlaceholderFormat(squirrel.Dollar)
+
+	for _, v := range batch {
+		query = query.Values(v.SlideId, v.Link)
+	}
+
+	rows, err := query.Query()
+	if err != nil {
+		log.Print("Error pushing batch", batch, "error", err)
+		return err
+	}
+	defer func() {
+		err = rows.Close()
+		if err != nil {
+			log.Print("Error closing rows in batch insert", err)
+		}
+	}()
+
+	for rows.Next() {
+		var id uint64
+		errScan := rows.Scan(&id)
+		if errScan != nil {
+			log.Print(errScan)
+			return errScan
+		}
+		*dstIDs = append(*dstIDs, id)
+	}
+
+	return nil
+}
+
+func (r *repo) AddVideo(ctx context.Context, v models.Video) (uint64, error) {
+	log.Print("Adding single video", v)
 	query := squirrel.Insert(tableName).
 		Columns("slide_id", "link").
 		Values(v.SlideId, v.Link).
@@ -135,3 +163,14 @@ func (r *repo) GetVideos(ctx context.Context, limit, offset uint64) ([]models.Vi
 	return vs[:len(vs):len(vs)], nil
 }
 
+func (r *repo) UpdateVideo(ctx context.Context, v models.Video) error {
+	query := squirrel.Update(tableName).
+		Set("slide_id", v.SlideId).
+		Set("link", v.Link).
+		Where(squirrel.Eq{"id": v.VideoId}).
+		RunWith(r.db).
+		PlaceholderFormat(squirrel.Dollar)
+
+	_, err := query.ExecContext(ctx)
+	return err
+}
